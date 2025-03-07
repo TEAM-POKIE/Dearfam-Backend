@@ -1,6 +1,6 @@
 package com.example.dearfam.domain.dev.controller;
 
-import com.example.dearfam.common.dto.Response;
+import com.example.dearfam.common.dto.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

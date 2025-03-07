@@ -1,4 +1,4 @@
-package com.example.dearfam.common.configuration;
+package com.example.dearfam.common.configuration.security;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;

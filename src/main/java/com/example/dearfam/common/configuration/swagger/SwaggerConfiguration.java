@@ -1,4 +1,4 @@
-package com.example.dearfam.common.configuration;
+package com.example.dearfam.common.configuration.swagger;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.models.Components;
