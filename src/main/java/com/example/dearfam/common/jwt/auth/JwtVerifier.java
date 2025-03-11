@@ -8,7 +8,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.dearfam.common.dto.token.TokenDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -17,7 +16,6 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class JwtVerifier {
     private final Algorithm tokenAlgorithm;
-    @Value("${spring.profiles.active}") String profile;
 
     public TokenDto verify(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
