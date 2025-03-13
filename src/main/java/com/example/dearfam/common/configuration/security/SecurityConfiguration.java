@@ -46,7 +46,7 @@ public class SecurityConfiguration {
                         authorize -> authorize
                                 .requestMatchers(request -> request.getRequestURI().startsWith("/swagger-ui")).permitAll()
                                 .requestMatchers(request -> request.getRequestURI().startsWith("/v3/api-docs")).permitAll()
-                                .requestMatchers(AntPathRequestMatcher.antMatcher("/dev/**")).authenticated()
+                                .requestMatchers(AntPathRequestMatcher.antMatcher("/dev/**")).permitAll()
                                 .requestMatchers(request -> request.getRequestURI().startsWith("/h2-console")).permitAll()
                                 .anyRequest().authenticated()
                 )
