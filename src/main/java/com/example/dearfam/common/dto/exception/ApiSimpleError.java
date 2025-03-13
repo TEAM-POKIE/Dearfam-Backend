@@ -31,6 +31,9 @@ public record ApiSimpleError(@NonNull String field, @NonNull String message) {
                     .field(field)
                     .message(currentCause.getLocalizedMessage() != null ? currentCause.getLocalizedMessage() : "No message provided")
                     .build();
+
+            // currentCause를 갱신해야, 예외체인에 대한 탐색이 올바르게 진행됨
+            currentCause = currentCause.getCause();
         }
 
         return subErrors;
