@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.users.entity;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.domain.family.entity.Family;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,7 +17,9 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "user_id")
     private Long id;
 
-    // TODO : family ID foreign key로 등록하기
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id")
+    private Family family;
 
     @Column(name = "user_nickname", nullable = false, length = 50)
     private String userNickname;
@@ -24,8 +27,6 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "user_role", nullable = false)
     private String userRole;
 
-    @Column(name = "user_family_role", nullable = false)
-    private String userFamilyRole;
 
     @Column(name = "is_family_room_manager")
     private Boolean isFamilyRoomManager;
@@ -37,7 +38,6 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     private String refreshToken;
 
     @Builder
-    public Users(String userNickName, String userRole, String userFamilyRole, Boolean isFamilyRoomManager,
                  String profileImage, String refreshToken) {
         this.userNickname = userNickName;
         this.userRole = userRole;

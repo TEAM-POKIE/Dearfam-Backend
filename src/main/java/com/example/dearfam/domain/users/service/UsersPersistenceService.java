@@ -13,8 +13,8 @@ public class UsersPersistenceService {
     private final UsersRepository usersRepository;
 
     @Transactional
-    public Users createUser(String userNickName, String userRole, String userFamilyRole, 
-                          Boolean isFamilyRoomManager, String profileImage) {
+    public Users createUser(String userNickName, String userRole,
+                            String profileImage) {
         // userRole 검증 로직
         if ("admin".equalsIgnoreCase(userRole)) {
             throw UsersErrorCode.INVALID_ROLE.defaultException();
@@ -23,16 +23,11 @@ public class UsersPersistenceService {
             userRole = "USER";
         }
         
-        // isFamilyRoomManager 검증 로직
-        if (isFamilyRoomManager == null) {
-            isFamilyRoomManager = false;
-        }
-        
         Users user = Users.builder()
                 .userNickName(userNickName)
                 .userRole(userRole)
-                .userFamilyRole(userFamilyRole)
-                .isFamilyRoomManager(isFamilyRoomManager)
+                .userFamilyRole(null)
+                .isFamilyRoomManager(false)
                 .profileImage(profileImage)
                 .refreshToken(null)
                 .build();
