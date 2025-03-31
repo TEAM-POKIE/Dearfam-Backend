@@ -2,17 +2,16 @@ package com.example.dearfam.domain.users.controller;
 
 import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
+import com.example.dearfam.domain.family.controller.response.GetFamilyResponse;
 import com.example.dearfam.domain.users.controller.request.UserNicknameRequest;
 import com.example.dearfam.domain.users.controller.response.GetUserResponse;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.service.UsersService;
-import com.mysql.cj.x.protobuf.Mysqlx;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -66,9 +65,24 @@ public class UsersController {
     @PutMapping("/nickname")
     public Response<String> updateUserNickname(@Valid @RequestBody UserNicknameRequest userNicknameRequest) {
         Long userId = jwtService.getTokenDto().getUserId();
-
         usersService.updateUserNickname(userId, userNicknameRequest.getNickname());
         return Response.data("User Nickname Updated");
+    }
+
+    @Operation(
+            summary = "가족 조회",
+            description = "로그인한 유저의 가족을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "USER_NOT_FOUND or FAMILY_NOT_FOUND"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/family")
+    public Response<GetFamilyResponse> getUserFamily() {
+        Long userId = jwtService.getTokenDto().getUserId();
+        GetFamilyResponse family = usersService.getUserFamily(userId);
+        return Response.data(family);
     }
 
 }

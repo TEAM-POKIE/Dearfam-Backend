@@ -1,5 +1,8 @@
 package com.example.dearfam.domain.users.service;
 
+import com.example.dearfam.domain.family.controller.response.GetFamilyResponse;
+import com.example.dearfam.domain.family.dto.FamilyDto;
+import com.example.dearfam.domain.family.repository.FamilyRepository;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
@@ -10,8 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class UsersService {
     private final UsersRepository usersRepository;
 
@@ -41,5 +44,15 @@ public class UsersService {
 
         user.setUserNickname(newNickname);
         usersRepository.save(user);
+    }
+
+    @Transactional
+    public GetFamilyResponse getUserFamily(Long userId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        FamilyDto familyDto = FamilyDto.from(user.getFamily());
+
+        return GetFamilyResponse.from(familyDto);
     }
 }
