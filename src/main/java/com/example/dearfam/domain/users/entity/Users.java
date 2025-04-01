@@ -14,7 +14,6 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,6 +26,9 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "user_role", nullable = false)
     private String userRole;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_family_role")
+    private UserFamilyRole userFamilyRole;
 
     @Column(name = "is_family_room_manager")
     private Boolean isFamilyRoomManager;
@@ -34,7 +36,6 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "profile_image")
     private String profileImage;
 
-    @Column(name = "refresh_token", nullable = false, length = 1024)
     private String refreshToken;
 
     @Builder
