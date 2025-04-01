@@ -16,6 +16,7 @@ public class GetUserResponse {
     private Long familyId;
     private String userNickName;
     private String userRole;
+    private UserFamilyRole userFamilyRole;
     private Boolean isFamilyRoomManager;
     private String profileImage;
 

@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 public class FamilyDto {
     private Long id;
     private String familyName;
+    private Integer parentCount;
+    private Integer childCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -22,6 +24,8 @@ public class FamilyDto {
         return FamilyDto.builder()
                 .id(family.getId())
                 .familyName(family.getFamilyName())
+                .parentCount(family.getParentCount())
+                .childCount(family.getChildCount())
                 .createdAt(family.getCreatedAt())
                 .updatedAt(family.getUpdatedAt())
                 .build();

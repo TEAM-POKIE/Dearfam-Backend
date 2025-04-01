@@ -23,11 +23,18 @@ public class Family extends BaseTimeEntity {
     @Column(name = "family_name", nullable = false, length = 20)
     private String familyName;
 
+    @Column(name = "parent_count")
+    private Integer parentCount;
+
+    @Column(name = "child_count")
+    private Integer childCount;
+
     @Builder
-    public Family(Long id, String familyName) {
+    public Family(Long id, String familyName, Integer parentCount, Integer childCount) {
         this.id = id;
         this.familyName = familyName;
+        this.parentCount = parentCount != null ? parentCount : 0;
+        this.childCount = childCount != null ? childCount : 0;
     }
-
 
 }
