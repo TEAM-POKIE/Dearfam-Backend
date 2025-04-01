@@ -14,6 +14,7 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,10 +37,13 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "profile_image")
     private String profileImage;
 
+    @Column(name = "refresh_token", length = 1024)
     private String refreshToken;
 
     @Builder
+    public Users(Family family, String userNickName, String userRole, UserFamilyRole userFamilyRole, Boolean isFamilyRoomManager,
                  String profileImage, String refreshToken) {
+        this.family = family;
         this.userNickname = userNickName;
         this.userRole = userRole;
         this.userFamilyRole = userFamilyRole;

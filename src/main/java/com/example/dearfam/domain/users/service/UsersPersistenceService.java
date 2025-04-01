@@ -24,6 +24,7 @@ public class UsersPersistenceService {
         }
         
         Users user = Users.builder()
+                .family(null)
                 .userNickName(userNickName)
                 .userRole(userRole)
                 .userFamilyRole(null)
