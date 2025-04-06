@@ -1,6 +1,6 @@
 package com.example.dearfam.domain.family.service;
 
-import com.example.dearfam.domain.family.dto.InviteLinkResponse;
+import com.example.dearfam.domain.family.dto.InviteLinkDto;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.family.exception.InviteErrorCode;
 import com.example.dearfam.domain.family.invite.InviteLinkStore;
@@ -24,7 +24,7 @@ public class InviteService {
     @Value("${invite.base-url}")
     private String inviteBaseUrl;
 
-    public InviteLinkResponse generateInviteLink(Long userId) {
+    public InviteLinkDto generateInviteLink(Long userId) {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
 
@@ -43,7 +43,7 @@ public class InviteService {
 
         String link = inviteBaseUrl + "?code=" + code;
 
-        return InviteLinkResponse.from(link, code, expiresAt);
+        return InviteLinkDto.from(link, code, expiresAt);
     }
 
     public Long validateInviteCodeAndReturnFamilyId(String inviteCode) {

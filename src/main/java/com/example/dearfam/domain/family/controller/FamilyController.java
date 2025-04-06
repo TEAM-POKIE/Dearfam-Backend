@@ -7,7 +7,7 @@ import com.example.dearfam.domain.family.controller.request.UserFamilyRoleReques
 import com.example.dearfam.domain.family.controller.response.GetFamilyResponse;
 import com.example.dearfam.domain.family.controller.response.GetJoinedFamilyResponse;
 import com.example.dearfam.domain.family.dto.FamilyDto;
-import com.example.dearfam.domain.family.dto.InviteLinkResponse;
+import com.example.dearfam.domain.family.dto.InviteLinkDto;
 import com.example.dearfam.domain.family.service.FamilyService;
 import com.example.dearfam.domain.family.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,10 +71,10 @@ public class FamilyController {
             }
     )
     @PostMapping("/generate-link")
-    public Response<InviteLinkResponse> generateInviteLink() {
+    public Response<InviteLinkDto> generateInviteLink() {
         Long userId = jwtService.getTokenDto().getUserId();
 
-        InviteLinkResponse linkInfo = inviteService.generateInviteLink(userId);
+        InviteLinkDto linkInfo = inviteService.generateInviteLink(userId);
 
         return Response.data(linkInfo);
     }

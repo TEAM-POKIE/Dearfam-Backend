@@ -1,6 +1,6 @@
 package com.example.dearfam.domain.family.service;
 
-import com.example.dearfam.domain.family.dto.InviteLinkResponse;
+import com.example.dearfam.domain.family.dto.InviteLinkDto;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.InviteException;
 import com.example.dearfam.domain.family.invite.InviteLinkStore;
@@ -50,7 +50,7 @@ class InviteServiceTest {
         ReflectionTestUtils.setField(inviteService, "inviteBaseUrl", baseUrl);
 
         // when
-        InviteLinkResponse response = inviteService.generateInviteLink(userId);
+        InviteLinkDto response = inviteService.generateInviteLink(userId);
         System.out.println(response.getLink());
 
         // then
