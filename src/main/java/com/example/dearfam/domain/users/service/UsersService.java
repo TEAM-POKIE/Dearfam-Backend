@@ -1,9 +1,5 @@
 package com.example.dearfam.domain.users.service;
 
-import com.example.dearfam.domain.family.controller.response.GetFamilyResponse;
-import com.example.dearfam.domain.family.dto.FamilyDto;
-import com.example.dearfam.domain.family.entity.Family;
-import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
@@ -45,20 +41,5 @@ public class UsersService {
 
         user.setUserNickname(newNickname);
         usersRepository.save(user);
-    }
-
-    @Transactional
-    public GetFamilyResponse getUserFamily(Long userId) {
-        Users user = usersRepository.findById(userId)
-                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
-
-        Family family = user.getFamily();
-        if (family == null) {
-            throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
-        }
-
-        FamilyDto familyDto = FamilyDto.from(user.getFamily());
-
-        return GetFamilyResponse.from(familyDto);
     }
 }
