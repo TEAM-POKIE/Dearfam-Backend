@@ -5,15 +5,13 @@ import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.family.controller.request.FamilyNameRequest;
 import com.example.dearfam.domain.family.controller.request.UserFamilyRoleRequest;
 import com.example.dearfam.domain.family.dto.FamilyDto;
+import com.example.dearfam.domain.family.dto.InviteLinkResponse;
 import com.example.dearfam.domain.family.service.FamilyService;
+import com.example.dearfam.domain.family.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class FamilyController {
     private final FamilyService familyService;
     private final JwtService jwtService;
+    private final InviteService inviteService;
 
     @Operation(
             summary = "가족 생성",
@@ -57,5 +56,23 @@ public class FamilyController {
         familyService.assignUserFamilyRole(userId, request.getFamilyRole());
 
         return Response.data(request.getFamilyRole() + " 역할을 설정했습니다.");
+    }
+
+    @Operation(
+            summary = "초대 링크 생성",
+            description = "로그인한 유저의 가족의 초대 링크를 생성합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "유저 또는 가족 정보 없음"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @PostMapping("/generate-link")
+    public Response<InviteLinkResponse> generateInviteLink() {
+        Long userId = jwtService.getTokenDto().getUserId();
+
+        InviteLinkResponse linkInfo = inviteService.generateInviteLink(userId);
+
+        return Response.data(linkInfo);
     }
 }
