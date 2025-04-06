@@ -4,6 +4,7 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.family.controller.request.FamilyNameRequest;
 import com.example.dearfam.domain.family.controller.request.UserFamilyRoleRequest;
+import com.example.dearfam.domain.family.controller.response.GetJoinedFamilyResponse;
 import com.example.dearfam.domain.family.dto.FamilyDto;
 import com.example.dearfam.domain.family.dto.InviteLinkResponse;
 import com.example.dearfam.domain.family.service.FamilyService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -75,4 +77,27 @@ public class FamilyController {
 
         return Response.data(linkInfo);
     }
+
+    @Operation(
+            summary = "가족 참여",
+            description = "초대 링크로 가족에 참여하고, 참여한 가족을 보여줍니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "401", description = "유효하지 않은 코드"),
+                    @ApiResponse(responseCode = "404", description = "유저 또는 가족 정보 없음"),
+                    @ApiResponse(responseCode = "409", description = "이미 가족 존재함"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @PostMapping("/join")
+    public Response<GetJoinedFamilyResponse> joinFamily(@RequestParam String code) {
+        Long userId = jwtService.getTokenDto().getUserId();
+
+        Long familyId = inviteService.validateInviteCodeAndReturnFamilyId(code); // 유효성 검증 & 예외 처리
+        FamilyDto familyDto =  familyService.addUserToFamily(userId, familyId);
+        GetJoinedFamilyResponse joinedFamily = GetJoinedFamilyResponse.from(familyDto);
+
+        return Response.data(joinedFamily);
+    }
+
 }

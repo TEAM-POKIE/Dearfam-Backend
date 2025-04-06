@@ -80,4 +80,22 @@ public class FamilyService {
         familyRepository.save(family);
     }
 
+    @Transactional
+    public FamilyDto addUserToFamily(Long userId, Long familyId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        if (user.getFamily() != null) {
+            throw FamilyErrorCode.FAMILY_ALREADY_EXISTS.defaultException();
+        }
+
+        Family family = familyRepository.findById(familyId)
+                .orElseThrow(FamilyErrorCode.FAMILY_NOT_FOUND::defaultException);
+
+        user.setFamily(family);
+        usersRepository.save(user);
+        return FamilyDto.from(family);
+    }
+
+
 }
