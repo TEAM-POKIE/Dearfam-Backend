@@ -6,13 +6,11 @@ import com.example.dearfam.domain.users.controller.request.UserNicknameRequest;
 import com.example.dearfam.domain.users.controller.response.GetUserResponse;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.service.UsersService;
-import com.mysql.cj.x.protobuf.Mysqlx;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -66,7 +64,6 @@ public class UsersController {
     @PutMapping("/nickname")
     public Response<String> updateUserNickname(@Valid @RequestBody UserNicknameRequest userNicknameRequest) {
         Long userId = jwtService.getTokenDto().getUserId();
-
         usersService.updateUserNickname(userId, userNicknameRequest.getNickname());
         return Response.data("User Nickname Updated");
     }

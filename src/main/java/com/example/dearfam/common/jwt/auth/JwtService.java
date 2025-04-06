@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.dearfam.common.dto.token.AuthTokenDto;
 import com.example.dearfam.common.dto.token.TokenDto;
+import com.example.dearfam.common.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,7 +46,7 @@ public class JwtService {
     public TokenDto getTokenDto() {
         TokenDto tokenDto = (TokenDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (tokenDto == null) {
-            throw new RuntimeException("TokenDto is null");
+            throw new CustomException("TokenDto is null");
         }
         return tokenDto;
     }

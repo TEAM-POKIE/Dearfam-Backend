@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.users.entity;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.domain.family.entity.Family;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,10 +14,12 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long id;
 
-    // TODO : family ID foreign key로 등록하기
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id")
+    private Family family;
 
     @Column(name = "user_nickname", nullable = false, length = 50)
     private String userNickname;
@@ -24,8 +27,10 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "user_role", nullable = false)
     private String userRole;
 
-    @Column(name = "user_family_role", nullable = false)
-    private String userFamilyRole;
+    // TODO : API 명세서 수정
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_family_role")
+    private UserFamilyRole userFamilyRole;
 
     @Column(name = "is_family_room_manager")
     private Boolean isFamilyRoomManager;
@@ -33,12 +38,13 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "profile_image")
     private String profileImage;
 
-    @Column(name = "refresh_token", nullable = false, length = 1024)
+    @Column(name = "refresh_token", length = 1024)
     private String refreshToken;
 
     @Builder
-    public Users(String userNickName, String userRole, String userFamilyRole, Boolean isFamilyRoomManager,
+    public Users(Family family, String userNickName, String userRole, UserFamilyRole userFamilyRole, Boolean isFamilyRoomManager,
                  String profileImage, String refreshToken) {
+        this.family = family;
         this.userNickname = userNickName;
         this.userRole = userRole;
         this.userFamilyRole = userFamilyRole;

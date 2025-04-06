@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class UsersService {
     private final UsersRepository usersRepository;
 
