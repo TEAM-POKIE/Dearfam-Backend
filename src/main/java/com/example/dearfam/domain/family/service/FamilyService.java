@@ -1,9 +1,12 @@
 package com.example.dearfam.domain.family.service;
 
+import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.domain.family.controller.response.GetFamilyResponse;
 import com.example.dearfam.domain.family.dto.FamilyDto;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.family.repository.FamilyRepository;
+import com.example.dearfam.domain.users.dto.FamilyMemberDto;
 import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
@@ -11,6 +14,9 @@ import com.example.dearfam.domain.users.repository.UsersRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -97,5 +103,55 @@ public class FamilyService {
         return FamilyDto.from(family);
     }
 
+
+    @Transactional
+    public GetFamilyResponse getUserFamily(Long userId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        Family family = user.getFamily();
+        if (family == null) {
+            throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
+        }
+
+        FamilyDto familyDto = FamilyDto.from(family);
+
+        List<FamilyMemberDto> familyMembers = getMembersByFamily(family);
+
+        return GetFamilyResponse.from(familyDto, familyMembers);
+    }
+
+    @Transactional
+    public GetFamilyResponse getFamilyByFamilyId(Long familyId) {
+        Family family = familyRepository.findById(familyId)
+                .orElseThrow(FamilyErrorCode.FAMILY_NOT_FOUND::defaultException);
+
+        FamilyDto familyDto = FamilyDto.from(family);
+
+        List<FamilyMemberDto> familyMembers = getMembersByFamily(family);
+
+        return GetFamilyResponse.from(familyDto, familyMembers);
+    }
+
+
+    // 아빠, 엄마, 추가된 자녀 순서대로 가족 구성원 리스트를 뽑아내는 함수
+    private List<FamilyMemberDto> getMembersByFamily(Family family) {
+        List<Users> members = usersRepository.findAllByFamily(family);
+
+        return members.stream()
+                .sorted(Comparator.comparing((Users u) -> {
+                    UserFamilyRole userFamilyRole = u.getUserFamilyRole();
+                    if (userFamilyRole == null) return 3; // 제일 마지막
+                    if (userFamilyRole == UserFamilyRole.FATHER) return 0;
+                    if (userFamilyRole == UserFamilyRole.MOTHER) return 1;
+                    return 2;
+                }).thenComparing(BaseTimeEntity::getCreatedAt))
+                .map(member -> FamilyMemberDto.from(
+                        member.getId(),
+                        member.getUserNickname(),
+                        member.getUserFamilyRole()
+                ))
+                .toList();
+    }
 
 }

@@ -4,6 +4,7 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.family.controller.request.FamilyNameRequest;
 import com.example.dearfam.domain.family.controller.request.UserFamilyRoleRequest;
+import com.example.dearfam.domain.family.controller.response.GetFamilyResponse;
 import com.example.dearfam.domain.family.controller.response.GetJoinedFamilyResponse;
 import com.example.dearfam.domain.family.dto.FamilyDto;
 import com.example.dearfam.domain.family.dto.InviteLinkResponse;
@@ -98,6 +99,37 @@ public class FamilyController {
         GetJoinedFamilyResponse joinedFamily = GetJoinedFamilyResponse.from(familyDto);
 
         return Response.data(joinedFamily);
+    }
+
+    @Operation(
+            summary = "가족 조회",
+            description = "로그인한 유저의 가족을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "USER_NOT_FOUND or FAMILY_NOT_FOUND"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/members")
+    public Response<GetFamilyResponse> getUserFamily() {
+        Long userId = jwtService.getTokenDto().getUserId();
+        GetFamilyResponse family = familyService.getUserFamily(userId);
+        return Response.data(family);
+    }
+
+    @Operation(
+            summary = "가족 ID를 통한 조회",
+            description = "가족 ID를 통해 가족을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "FAMILY_NOT_FOUND"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/members/{familyId}")
+    public Response<GetFamilyResponse> getUserFamilyByFamilyId(@PathVariable Long familyId) {
+        GetFamilyResponse family = familyService.getFamilyByFamilyId(familyId);
+        return Response.data(family);
     }
 
 }
