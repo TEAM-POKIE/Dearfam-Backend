@@ -27,6 +27,7 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "user_role", nullable = false)
     private String userRole;
 
+    // TODO : API 명세서 수정
     @Enumerated(EnumType.STRING)
     @Column(name = "user_family_role")
     private UserFamilyRole userFamilyRole;
