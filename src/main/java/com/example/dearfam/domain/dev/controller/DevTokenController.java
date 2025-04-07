@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("local")
 @RestController
 @RequestMapping("/dev")
-@Tag(name = "개발용 토큰 API", description = "개발 환경에서만 사용할 수 있는 토큰 발급 API")
+@Tag(name = "🖥️ 개발용 토큰 API", description = "개발 환경에서만 사용할 수 있는 토큰 발급 API")
 @RequiredArgsConstructor
 public class DevTokenController {
 

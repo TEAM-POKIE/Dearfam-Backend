@@ -12,6 +12,7 @@ import com.example.dearfam.domain.family.service.FamilyService;
 import com.example.dearfam.domain.family.service.InviteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/family")
+@Tag(name = "Family Controller", description = "가족 관련 기능(생성, 초대, 조회 등)을 처리하는 API")
 public class FamilyController {
     private final FamilyService familyService;
     private final JwtService jwtService;
