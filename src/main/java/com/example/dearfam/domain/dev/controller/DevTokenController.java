@@ -1,6 +1,6 @@
 package com.example.dearfam.domain.dev.controller;
 
-import com.example.dearfam.common.dto.token.AuthTokenDto;
+import com.example.dearfam.domain.auth.dto.AuthTokenDto;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

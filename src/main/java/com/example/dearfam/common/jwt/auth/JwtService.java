@@ -2,7 +2,7 @@ package com.example.dearfam.common.jwt.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.example.dearfam.common.dto.token.AuthTokenDto;
+import com.example.dearfam.domain.auth.dto.AuthTokenDto;
 import com.example.dearfam.common.dto.token.TokenDto;
 import com.example.dearfam.common.exception.CustomException;
 import lombok.RequiredArgsConstructor;
