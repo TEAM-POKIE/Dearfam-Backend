@@ -1,4 +1,4 @@
-package com.example.dearfam.common.dto.token;
+package com.example.dearfam.domain.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

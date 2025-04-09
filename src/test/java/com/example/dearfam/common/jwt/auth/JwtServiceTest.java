@@ -1,21 +1,17 @@
 package com.example.dearfam.common.jwt.auth;
 
 import com.auth0.jwt.algorithms.Algorithm;
-import com.example.dearfam.common.dto.token.AuthTokenDto;
+import com.example.dearfam.domain.auth.dto.AuthTokenDto;
 import com.example.dearfam.common.dto.token.TokenDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class JwtServiceTest {
 

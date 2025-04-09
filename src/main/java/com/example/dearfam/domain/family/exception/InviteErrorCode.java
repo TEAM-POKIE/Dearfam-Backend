@@ -25,12 +25,12 @@ public enum InviteErrorCode implements ErrorCode {
     }
 
     @Override
-    public CustomException defaultException() {
+    public InviteException defaultException() {
         return new InviteException(this);
     }
 
     @Override
-    public CustomException defaultException(Throwable cause) {
+    public InviteException defaultException(Throwable cause) {
         return new InviteException(this, cause);
     }
 }

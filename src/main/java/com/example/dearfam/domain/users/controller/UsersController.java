@@ -8,6 +8,7 @@ import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Users Controller", description = "사용자 관련 기능(조회, 수정)을 처리하는 API")
 public class UsersController {
     private final UsersService usersService;
     private final JwtService jwtService;
