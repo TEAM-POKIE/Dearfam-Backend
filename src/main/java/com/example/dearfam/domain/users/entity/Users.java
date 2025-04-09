@@ -27,12 +27,21 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     @Column(name = "user_role", nullable = false)
     private String userRole;
 
-    // TODO : API 명세서 수정
     @Enumerated(EnumType.STRING)
     @Column(name = "user_family_role")
     private UserFamilyRole userFamilyRole;
 
-    @Column(name = "is_family_room_manager")
+    // 아래 세 개의 컬럼은 소셜 로그인 시 받는 정보들
+    @Column(name = "user_email", nullable = false, length = 50)
+    private String email;
+
+    @Column(name = "social_provider", nullable = false, length = 20)
+    private String socialProvider;
+
+    @Column(name = "social_user_id", nullable = false)
+    private String socialUserId;
+
+    @Column(name = "is_family_room_manager", nullable = false)
     private Boolean isFamilyRoomManager;
 
     @Column(name = "profile_image")
@@ -42,12 +51,16 @@ public class Users extends BaseTimeEntity {  // BaseTimeEntity에 생성일(crea
     private String refreshToken;
 
     @Builder
-    public Users(Family family, String userNickName, String userRole, UserFamilyRole userFamilyRole, Boolean isFamilyRoomManager,
-                 String profileImage, String refreshToken) {
+    public Users(Family family, String userNickName, String userRole, UserFamilyRole userFamilyRole,
+                 String email, String socialProvider, String socialUserId,
+                 Boolean isFamilyRoomManager,String profileImage, String refreshToken) {
         this.family = family;
         this.userNickname = userNickName;
         this.userRole = userRole;
         this.userFamilyRole = userFamilyRole;
+        this.email = email;
+        this.socialProvider = socialProvider;
+        this.socialUserId = socialUserId;
         this.isFamilyRoomManager = isFamilyRoomManager;
         this.profileImage = profileImage;
         this.refreshToken = refreshToken;

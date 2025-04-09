@@ -13,8 +13,8 @@ public class UsersPersistenceService {
     private final UsersRepository usersRepository;
 
     @Transactional
-    public Users createUser(String userNickName, String userRole,
-                            String profileImage) {
+    public Users createUser(String userNickName, String userRole, String email, String socialProvider,
+                            String socialUserId, String profileImage) {
         // userRole 검증 로직
         if ("admin".equalsIgnoreCase(userRole)) {
             throw UsersErrorCode.INVALID_ROLE.defaultException();
@@ -28,6 +28,9 @@ public class UsersPersistenceService {
                 .userNickName(userNickName)
                 .userRole(userRole)
                 .userFamilyRole(null)
+                .email(email)
+                .socialProvider(socialProvider)
+                .socialUserId(socialUserId)
                 .isFamilyRoomManager(false)
                 .profileImage(profileImage)
                 .refreshToken(null)
