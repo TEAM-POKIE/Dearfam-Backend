@@ -51,3 +51,6 @@ out/
 .env
 application.properties
 application.yml
+
+### 임시 유저 쿼리 작성 파일 ###
+src/main/resources/static/createUser.txt
