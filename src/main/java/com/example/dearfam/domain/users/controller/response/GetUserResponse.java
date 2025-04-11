@@ -14,7 +14,7 @@ import static lombok.AccessLevel.PRIVATE;
 public class GetUserResponse {
     private Long id;
     private Long familyId;
-    private String userNickName;
+    private String userNickname;
     private String userRole;
     private UserFamilyRole userFamilyRole;
     private Boolean isFamilyRoomManager;
@@ -24,7 +24,7 @@ public class GetUserResponse {
         return GetUserResponse.builder()
                 .id(usersDto.getId())
                 .familyId(usersDto.getFamily() != null ? usersDto.getFamily().getId() : null)
-                .userNickName(usersDto.getUserNickName())
+                .userNickname(usersDto.getUserNickName())
                 .userRole(usersDto.getUserRole())
                 .userFamilyRole(usersDto.getUserFamilyRole())
                 .isFamilyRoomManager(usersDto.getIsFamilyRoomManager())
