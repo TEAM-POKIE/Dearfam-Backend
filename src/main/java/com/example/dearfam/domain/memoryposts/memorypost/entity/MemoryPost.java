@@ -1,0 +1,63 @@
+package com.example.dearfam.domain.memoryposts.memorypost.entity;
+
+import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.domain.family.entity.Family;
+import com.example.dearfam.domain.users.entity.Users;
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "memory_post")
+public class MemoryPost extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "memory_post_id", nullable = false)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id", nullable = false)
+    private Family family;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "writer_id", nullable = false)
+    private Users writer;
+
+    @Column(name = "memory_post_title", nullable = false, length = 50)
+    private String memoryPostTitle;
+
+    @Column(name = "memory_post_content", nullable = false, length = 500)
+    private String memoryPostContent;
+
+    @Column(name = "memory_post_comment_count", nullable = false)
+    private Integer memoryPostCommentCount;
+
+    @Column(name = "memory_post_image_count", nullable = false)
+    private Integer memoryPostImageCount;
+
+    @Column(name = "memory_date", nullable = false)
+    private LocalDate memoryDate;
+
+    // TODO : 이미지 엔티티 만들고, OneToMany 로 추가하기
+
+    @Builder
+    public MemoryPost(Family family, Users writer, String memoryPostTitle, String memoryPostContent, Integer memoryPostCommentCount,
+                      Integer memoryPostImageCount, LocalDate memoryDate) {
+        this.family = family;
+        this.writer = writer;
+        this.memoryPostTitle = memoryPostTitle;
+        this.memoryPostContent = memoryPostContent;
+        this.memoryPostCommentCount = memoryPostCommentCount == null ? 0 : memoryPostCommentCount;
+        this.memoryPostImageCount = memoryPostImageCount == null ? 0 : memoryPostImageCount;
+        this.memoryDate = memoryDate;
+    }
+
+}
