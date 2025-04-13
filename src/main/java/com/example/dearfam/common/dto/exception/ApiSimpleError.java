@@ -2,8 +2,10 @@ package com.example.dearfam.common.dto.exception;
 
 import lombok.Builder;
 import lombok.NonNull;
+import org.springframework.validation.FieldError;
 
 import java.util.List;
+import java.util.Objects;
 
 @Builder
 public record ApiSimpleError(@NonNull String field, @NonNull String message) {
@@ -38,4 +40,12 @@ public record ApiSimpleError(@NonNull String field, @NonNull String message) {
 
         return subErrors;
     }
+
+    // Validation Error 기반 (FieldError 목록 처리)
+    public static List<ApiSimpleError> ofFieldErrors(List<FieldError> fieldErrors) {
+        return fieldErrors.stream()
+                .map(error -> new ApiSimpleError(error.getField(), Objects.requireNonNull(error.getDefaultMessage())))
+                .toList();
+    }
+
 }
