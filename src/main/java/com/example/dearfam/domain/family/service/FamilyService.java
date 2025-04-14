@@ -11,9 +11,9 @@ import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
 import com.example.dearfam.domain.users.repository.UsersRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
@@ -104,7 +104,7 @@ public class FamilyService {
     }
 
 
-    @Transactional
+    @Transactional(readOnly = true)
     public GetFamilyResponse getUserFamily(Long userId) {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
@@ -121,7 +121,7 @@ public class FamilyService {
         return GetFamilyResponse.from(familyDto, familyMembers);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public GetFamilyResponse getFamilyByFamilyId(Long familyId) {
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(FamilyErrorCode.FAMILY_NOT_FOUND::defaultException);

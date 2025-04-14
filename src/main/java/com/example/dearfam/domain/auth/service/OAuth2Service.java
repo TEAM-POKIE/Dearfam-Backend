@@ -7,9 +7,9 @@ import com.example.dearfam.domain.auth.exception.AuthErrorCode;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.repository.UsersRepository;
 import com.example.dearfam.domain.users.service.UsersPersistenceService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
