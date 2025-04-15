@@ -4,6 +4,7 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.request.CreateMemoryPostRequest;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.request.UpdateMemoryPostRequest;
+import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostFamilyMembersResponse;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostResponse;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetUpdatedPostResponse;
 import com.example.dearfam.domain.memoryposts.memorypost.service.MemoryPostService;
@@ -88,6 +89,18 @@ public class MemoryPostController {
         memoryPostService.deleteMemoryPost(writerId, postId);
 
         return Response.data("게시글을 삭제하였습니다.");
+    }
+
+    @Operation(
+            summary = "게시글 참여 가족 리스트 조회",
+            description = "게시글 ID를 통해 추억 게시글에 참여한 가족들의 ㅁ"
+    )
+    @GetMapping("/{postId}/family-members")
+    public Response<GetMemoryPostFamilyMembersResponse> getMemoryPostFamilyMembers(@PathVariable Long postId) {
+
+        GetMemoryPostFamilyMembersResponse response = memoryPostService.getMemoryPostFamilyMembers(postId);
+
+        return Response.data(response);
     }
 
 }
