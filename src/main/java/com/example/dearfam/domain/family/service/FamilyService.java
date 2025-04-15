@@ -139,18 +139,13 @@ public class FamilyService {
         List<Users> members = usersRepository.findAllByFamily(family);
 
         return members.stream()
-                .sorted(Comparator.comparing((Users u) -> {
-                    UserFamilyRole userFamilyRole = u.getUserFamilyRole();
-                    if (userFamilyRole == null) return 3; // 제일 마지막
-                    if (userFamilyRole == UserFamilyRole.FATHER) return 0;
-                    if (userFamilyRole == UserFamilyRole.MOTHER) return 1;
-                    return 2;
-                }).thenComparing(BaseTimeEntity::getCreatedAt))
-                .map(member -> FamilyMemberDto.from(
-                        member.getId(),
-                        member.getUserNickname(),
-                        member.getUserFamilyRole()
-                ))
+                .sorted(Comparator
+                        .comparing((Users u) -> {
+                            UserFamilyRole userFamilyRole = u.getUserFamilyRole();
+                            return userFamilyRole != null ? userFamilyRole.getSortOrder() : Integer.MAX_VALUE;
+                        })
+                        .thenComparing(BaseTimeEntity::getCreatedAt))
+                .map(FamilyMemberDto::from)
                 .toList();
     }
 
