@@ -93,7 +93,12 @@ public class MemoryPostController {
 
     @Operation(
             summary = "게시글 참여 가족 리스트 조회",
-            description = "게시글 ID를 통해 추억 게시글에 참여한 가족들의 ㅁ"
+            description = "게시글 ID를 통해 추억 게시글에 참여한 가족들의 리스트를 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "MEMORY_POST_NOT_FOUND"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
     )
     @GetMapping("/{postId}/family-members")
     public Response<GetMemoryPostFamilyMembersResponse> getMemoryPostFamilyMembers(@PathVariable Long postId) {
