@@ -15,4 +15,5 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     boolean existsByFamilyAndUserFamilyRole(Family family, UserFamilyRole userFamilyRole);
     List<Users> findAllByFamily(Family family);
     Optional<Users> findByEmail(String email);
+    List<Users> findAllByFamilyId(Long familyId);
 }
