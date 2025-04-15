@@ -1,5 +1,6 @@
 package com.example.dearfam.domain.users.dto;
 
+import com.example.dearfam.domain.family.dto.FamilyDto;
 import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import lombok.AccessLevel;
@@ -14,25 +15,22 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder(access = AccessLevel.PRIVATE)
 public class FamilyMemberDto {
-    private Long userId;
-    private String userNickname;
-    private UserFamilyRole userFamilyRole;
+    private Long familyMemberId;
+    private String familyMemberNickname;
+    private UserFamilyRole familyMemberRole;
+    // TODO : 여기에 이미지도 같이 넣지~
 
-    public static FamilyMemberDto from(Long userId, String userNickname, UserFamilyRole userFamilyRole) {
+    public static FamilyMemberDto from(Users familyMember) {
         return FamilyMemberDto.builder()
-                .userId(userId)
-                .userNickname(userNickname)
-                .userFamilyRole(userFamilyRole)
+                .familyMemberId(familyMember.getId())
+                .familyMemberNickname(familyMember.getUserNickname())
+                .familyMemberRole(familyMember.getUserFamilyRole())
                 .build();
     }
 
-    public static List<FamilyMemberDto> from(List<Users> users) {
-        return users.stream()
-                .map(user -> FamilyMemberDto.from(
-                        user.getId(),
-                        user.getUserNickname(),
-                        user.getUserFamilyRole()
-                ))
+    public static List<FamilyMemberDto> from(List<Users> familyMembers) {
+        return familyMembers.stream()
+                .map(FamilyMemberDto::from)
                 .collect(Collectors.toList());
     }
 }
