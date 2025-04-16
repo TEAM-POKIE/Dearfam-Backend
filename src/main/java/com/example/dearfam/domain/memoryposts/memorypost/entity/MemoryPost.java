@@ -2,6 +2,7 @@ package com.example.dearfam.domain.memoryposts.memorypost.entity;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
 import com.example.dearfam.domain.family.entity.Family;
+import com.example.dearfam.domain.memoryposts.comment.entity.MemoryPostComment;
 import com.example.dearfam.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -47,6 +50,9 @@ public class MemoryPost extends BaseTimeEntity {
     private LocalDate memoryDate;
 
     // TODO : 이미지 엔티티 만들고, OneToMany 로 추가하기
+
+    @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemoryPostComment> memoryPostComments = new ArrayList<>();
 
     @Builder
     public MemoryPost(Family family, Users writer, String memoryPostTitle, String memoryPostContent, Integer memoryPostCommentCount,
