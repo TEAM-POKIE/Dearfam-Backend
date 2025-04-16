@@ -3,11 +3,13 @@ package com.example.dearfam.domain.memoryposts.memorypost.controller.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 public class CreateMemoryPostRequest {
     // 제목, 내용, 사진, 날짜, 참여가족 id
