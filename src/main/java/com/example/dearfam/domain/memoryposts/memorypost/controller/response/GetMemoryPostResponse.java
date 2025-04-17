@@ -22,25 +22,30 @@ public class GetMemoryPostResponse {
     private String title;
     private String content;
     private LocalDate memoryDate;
+    private boolean isLiked;
     private List<MemoryPostFamilyMembersDto> participantFamilyMembers;
 
     // TODO : 추후 이미지는 id로 보낼지, 이미지 파일로 보낼지 한 번 고민
 
+    public static GetMemoryPostResponse from(MemoryPostDto memoryPostDto, List<MemoryPostFamilyMembersDto> participantFamilyMembers, boolean isLiked) {
         return GetMemoryPostResponse.builder()
                 .writerId(memoryPostDto.getWriter().getId())
                 .title(memoryPostDto.getMemoryPostsTitle())
                 .content(memoryPostDto.getMemoryPostsContent())
                 .memoryDate(memoryPostDto.getMemoryDate())
+                .isLiked(isLiked)
                 .participantFamilyMembers(participantFamilyMembers)
                 .build();
     }
 
     public static List<GetMemoryPostResponse> from(List<MemoryPostDto> memoryPosts,
                                                    Map<Long, List<MemoryPostFamilyMembersDto>> memoryPostFamilyMembers,
+                                                   Map<Long, Boolean> isLikedList) {
         return memoryPosts.stream()
                 .map(dto -> GetMemoryPostResponse.from(
                         dto,
                         memoryPostFamilyMembers.getOrDefault(dto.getId(), List.of()),
+                        isLikedList.getOrDefault(dto.getId(), false)
                 ))
                 .collect(Collectors.toList());
     }

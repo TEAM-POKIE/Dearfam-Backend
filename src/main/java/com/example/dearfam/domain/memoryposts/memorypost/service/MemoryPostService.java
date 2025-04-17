@@ -36,6 +36,7 @@ public class MemoryPostService {
     private final UsersRepository usersRepository;
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostFamilyMembersRepository memoryPostFamilyMembersRepository;
+    private final MemoryPostLikeRepository memoryPostLikeRepository;
 
     @Transactional
     public GetMemoryPostResponse createMemoryPost(Long writerId, String title, String content,
@@ -95,6 +96,9 @@ public class MemoryPostService {
 
         List<MemoryPostFamilyMembersDto> membersDtos = MemoryPostFamilyMembersDto.from(memoryPostFamilyMembers);
 
+        boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(writer, memoryPost);
+
+        return GetMemoryPostResponse.from(memoryPostDto, membersDtos, isLiked);
     }
 
     @Transactional
