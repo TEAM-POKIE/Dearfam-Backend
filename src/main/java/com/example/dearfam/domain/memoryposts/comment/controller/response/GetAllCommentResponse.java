@@ -1,7 +1,6 @@
 package com.example.dearfam.domain.memoryposts.comment.controller.response;
 
 import com.example.dearfam.domain.memoryposts.comment.dto.MemoryPostCommentDto;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

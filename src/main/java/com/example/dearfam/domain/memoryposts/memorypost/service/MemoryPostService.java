@@ -3,6 +3,8 @@ package com.example.dearfam.domain.memoryposts.memorypost.service;
 import com.example.dearfam.common.entity.BaseTimeEntity;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
+import com.example.dearfam.domain.memoryposts.like.repository.MemoryPostLikeRepository;
+import com.example.dearfam.domain.memoryposts.members.dto.MemoryPostFamilyMembersDto;
 import com.example.dearfam.domain.memoryposts.members.entity.MemoryPostFamilyMembers;
 import com.example.dearfam.domain.memoryposts.members.repository.MemoryPostFamilyMembersRepository;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostFamilyMembersResponse;
@@ -47,6 +49,8 @@ public class MemoryPostService {
             throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
         }
 
+        // TODO : 추후 이미지 저장 로직 여기서 추가 구현 후 memoryPostRepository save 하는 순서가 맞음.
+
         MemoryPost memoryPost = MemoryPost.builder()
                 .writer(writer)
                 .family(family)
@@ -55,7 +59,10 @@ public class MemoryPostService {
                 .memoryDate(memoryDate)
                 .build();
 
+        // 생성한 게시글 저장
         memoryPostRepository.save(memoryPost);
+
+        List<MemoryPostFamilyMembers> memoryPostFamilyMembers = List.of();
 
         if (participantFamilyMemberIds != null && !participantFamilyMemberIds.isEmpty()) {
             // 현재 가족 구성원 조회
@@ -66,7 +73,7 @@ public class MemoryPostService {
                     .collect(Collectors.toMap(Users::getId, Function.identity()));
 
             // 참여 가족 id를 통해 현재 가족 구성원에서 참여한 가족의 객체를 맵핑하고, MemoryPostFamilyMembers 객체를 빌드한다.
-            List<MemoryPostFamilyMembers> memoryPostFamilyMembers = participantFamilyMemberIds.stream()
+            memoryPostFamilyMembers = participantFamilyMemberIds.stream()
                     .filter(id -> !id.equals(writerId)) // 작성자는 제외
                     .map(id -> {
                         Users user = familyMemberMap.get(id);
@@ -80,14 +87,14 @@ public class MemoryPostService {
                     })
                     .toList();
 
+            // 게시글에 참여한 가족 구성원 저장
             memoryPostFamilyMembersRepository.saveAll(memoryPostFamilyMembers);
         }
 
-        // TODO : 추후 이미지 저장 로직 여기서 추가 구현
-
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
 
-        return GetMemoryPostResponse.from(memoryPostDto);
+        List<MemoryPostFamilyMembersDto> membersDtos = MemoryPostFamilyMembersDto.from(memoryPostFamilyMembers);
+
     }
 
     @Transactional

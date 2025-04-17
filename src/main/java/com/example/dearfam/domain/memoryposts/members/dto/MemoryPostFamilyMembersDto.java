@@ -8,26 +8,29 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @AllArgsConstructor
 @Builder
 public class MemoryPostFamilyMembersDto {
-    // 일단 만들어두긴 했는데, 필요없으면 삭제해도 됨.
-    private Long id;
-    private MemoryPost memoryPost;
-    private Users joinedFamilyMember;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+
+    private Long familyMemberId;
+    private String nickname;
+    // TODO : 참여한 가족의 프로필 이미지를 건네줘야함
 
     public static MemoryPostFamilyMembersDto from(MemoryPostFamilyMembers memoryPostFamilyMembers) {
         return MemoryPostFamilyMembersDto.builder()
-                .id(memoryPostFamilyMembers.getId())
-                .memoryPost(memoryPostFamilyMembers.getMemoryPost())
-                .joinedFamilyMember(memoryPostFamilyMembers.getJoinedFamilyMember())
-                .createdAt(memoryPostFamilyMembers.getCreatedAt())
-                .updatedAt(memoryPostFamilyMembers.getUpdatedAt())
+                .familyMemberId(memoryPostFamilyMembers.getJoinedFamilyMember().getId())
+                .nickname(memoryPostFamilyMembers.getJoinedFamilyMember().getUserNickname())
                 .build();
+    }
+
+    public static List<MemoryPostFamilyMembersDto> from(List<MemoryPostFamilyMembers> memoryPostFamilyMembers) {
+        return memoryPostFamilyMembers.stream()
+                .map(MemoryPostFamilyMembersDto::from)
+                .collect(Collectors.toList());
     }
 
 }
