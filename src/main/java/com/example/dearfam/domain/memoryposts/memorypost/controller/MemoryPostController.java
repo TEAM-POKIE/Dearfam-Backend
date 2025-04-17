@@ -112,7 +112,10 @@ public class MemoryPostController {
             summary = "게시글 단일 조회",
             description = "게시글 ID를 통해 하나의 게시글을 조회합니다. 현재 로그인한 유저를 기준으로 좋아요 여부를 판단합니다.",
             responses = {
-
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "403", description = "가족이 아닌 사용자는 게시글 접근 권한이 없음."),
+                    @ApiResponse(responseCode = "404", description = "유저, 게시글 정보를 찾을 수 없음."),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
             }
     )
     @GetMapping("/{postId}")
