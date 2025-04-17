@@ -108,4 +108,21 @@ public class MemoryPostController {
         return Response.data(response);
     }
 
+    @Operation(
+            summary = "게시글 단일 조회",
+            description = "게시글 ID를 통해 하나의 게시글을 조회합니다. 현재 로그인한 유저를 기준으로 좋아요 여부를 판단합니다.",
+            responses = {
+
+            }
+    )
+    @GetMapping("/{postId}")
+    public Response<GetMemoryPostResponse> getMemoryPost(@PathVariable Long postId) {
+
+        Long userId = jwtService.getTokenDto().getUserId();
+
+        GetMemoryPostResponse response = memoryPostService.getMemoryPostById(userId, postId);
+
+        return Response.data(response);
+    }
+
 }

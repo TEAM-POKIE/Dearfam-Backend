@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 public enum MemoryPostErrorCode implements ErrorCode {
     MEMORY_POST_NOT_FOUND("추억 게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     UNAUTHORIZED_MEMORY_POST_ACCESS("게시글 작성자만 수정 또는 삭제가 가능합니다.", HttpStatus.FORBIDDEN),
+    UNAUTHORIZED_FAMILY_ACCESS("같은 가족끼리만 접근이 가능합니다.", HttpStatus.FORBIDDEN),
     DEFAULT("추억 게시글 처리 중 문제가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;

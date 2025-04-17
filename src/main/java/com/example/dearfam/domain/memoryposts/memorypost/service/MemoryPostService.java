@@ -154,4 +154,29 @@ public class MemoryPostService {
         return GetMemoryPostFamilyMembersResponse.from(post, participants);
     }
 
+    @Transactional(readOnly = true)
+    public GetMemoryPostResponse getMemoryPostById(Long userId, Long postId) {
+
+        MemoryPost memoryPost = memoryPostRepository.findById(postId)
+                .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
+
+        MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
+
+        List<MemoryPostFamilyMembers> familyMembers = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
+        List<MemoryPostFamilyMembersDto> participants = MemoryPostFamilyMembersDto.from(familyMembers);
+
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        // 로그인한 사용자의 가족이 아닌 경우에는 접근 불가
+        if (!memoryPost.getFamily().getId().equals(user.getFamily().getId())) {
+            throw MemoryPostErrorCode.UNAUTHORIZED_FAMILY_ACCESS.defaultException();
+        }
+
+        boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(user, memoryPost);
+
+        return GetMemoryPostResponse.from(memoryPostDto, participants, isLiked);
+    }
+
+
 }
