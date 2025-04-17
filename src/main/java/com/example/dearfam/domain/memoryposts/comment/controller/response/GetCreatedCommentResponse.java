@@ -12,13 +12,13 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder(access = PRIVATE)
 public class GetCreatedCommentResponse {
     private Long postId;
-    private Long writerId;
+    private Long commentWriterId;
     private String content;
 
     public static GetCreatedCommentResponse from(MemoryPostCommentDto memoryPostCommentDto) {
         return GetCreatedCommentResponse.builder()
                 .postId(memoryPostCommentDto.getMemoryPost().getId())
-                .writerId(memoryPostCommentDto.getMemoryPost().getWriter().getId())
+                .commentWriterId(memoryPostCommentDto.getCommentWriter().getId())
                 .content(memoryPostCommentDto.getCommentContent())
                 .build();
     }
