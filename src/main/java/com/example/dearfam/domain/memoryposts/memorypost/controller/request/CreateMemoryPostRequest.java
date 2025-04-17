@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.memoryposts.memorypost.controller.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,7 @@ public class CreateMemoryPostRequest {
 
     private String content;
 
-    @NotBlank
+    @NotNull
     private LocalDate memoryDate;
 
     private List<Long> participantFamilyMemberIds;
