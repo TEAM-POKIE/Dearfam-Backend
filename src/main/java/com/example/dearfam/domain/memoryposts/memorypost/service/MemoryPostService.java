@@ -67,6 +67,7 @@ public class MemoryPostService {
 
             // 참여 가족 id를 통해 현재 가족 구성원에서 참여한 가족의 객체를 맵핑하고, MemoryPostFamilyMembers 객체를 빌드한다.
             List<MemoryPostFamilyMembers> memoryPostFamilyMembers = participantFamilyMemberIds.stream()
+                    .filter(id -> !id.equals(writerId)) // 작성자는 제외
                     .map(id -> {
                         Users user = familyMemberMap.get(id);
                         if (user == null) {
@@ -115,7 +116,7 @@ public class MemoryPostService {
                 .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
 
         if (!memoryPost.getWriter().getId().equals(writerId)) {
-            throw MemoryPostErrorCode.MEMORY_POST_NOT_FOUND.defaultException();
+            throw MemoryPostErrorCode.UNAUTHORIZED_MEMORY_POST_ACCESS.defaultException();
         }
         memoryPostRepository.delete(memoryPost);
     }
@@ -139,7 +140,7 @@ public class MemoryPostService {
                 .toList();
 
 
-        return GetMemoryPostFamilyMembersResponse.from(postId, participants);
+        return GetMemoryPostFamilyMembersResponse.from(post, participants);
     }
 
 }
