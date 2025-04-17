@@ -3,6 +3,7 @@ package com.example.dearfam.domain.memoryposts.memorypost.entity;
 import com.example.dearfam.common.entity.BaseTimeEntity;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.memoryposts.comment.entity.MemoryPostComment;
+import com.example.dearfam.domain.memoryposts.like.entity.MemoryPostLike;
 import com.example.dearfam.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -53,6 +54,9 @@ public class MemoryPost extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemoryPostComment> memoryPostComments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemoryPostLike> memoryPostLikes = new ArrayList<>();
 
     @Builder
     public MemoryPost(Family family, Users writer, String memoryPostTitle, String memoryPostContent, Integer memoryPostCommentCount,

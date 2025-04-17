@@ -1,0 +1,52 @@
+package com.example.dearfam.domain.memoryposts.like.service;
+
+import com.example.dearfam.domain.memoryposts.like.entity.MemoryPostLike;
+import com.example.dearfam.domain.memoryposts.like.repository.MemoryPostLikeRepository;
+import com.example.dearfam.domain.memoryposts.memorypost.entity.MemoryPost;
+import com.example.dearfam.domain.memoryposts.memorypost.exception.MemoryPostErrorCode;
+import com.example.dearfam.domain.memoryposts.memorypost.repository.MemoryPostRepository;
+import com.example.dearfam.domain.users.entity.Users;
+import com.example.dearfam.domain.users.exception.UsersErrorCode;
+import com.example.dearfam.domain.users.repository.UsersRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class MemoryPostLikeService {
+
+    private final UsersRepository usersRepository;
+    private final MemoryPostRepository memoryPostRepository;
+    private final MemoryPostLikeRepository memoryPostLikeRepository;
+
+    @Transactional
+    public String likeOrUnlikeMemoryPost(Long likedUserId, Long postId) {
+
+        Users likedUser = usersRepository.findById(likedUserId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        MemoryPost memoryPost = memoryPostRepository.findById(postId)
+                .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
+
+        MemoryPostLike likedInfo = memoryPostLikeRepository.findMemoryPostLikeByLikedUserAndMemoryPost(likedUser, memoryPost);
+
+        String response;
+
+        if (likedInfo == null) {
+            likedInfo = MemoryPostLike.builder()
+                    .likedUser(likedUser)
+                    .memoryPost(memoryPost)
+                    .build();
+
+            memoryPostLikeRepository.save(likedInfo);
+            response = "게시글에 좋아요를 눌렀습니다.";
+        } else {
+            memoryPostLikeRepository.delete(likedInfo);
+            response = "게시글의 좋아요를 취소했습니다.";
+        }
+
+        return response;
+    }
+
+}
