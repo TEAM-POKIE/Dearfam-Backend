@@ -1,16 +1,16 @@
 package com.example.dearfam.domain.memoryposts.memorypost.service;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.memoryposts.like.repository.MemoryPostLikeRepository;
 import com.example.dearfam.domain.memoryposts.members.dto.MemoryPostFamilyMembersDto;
 import com.example.dearfam.domain.memoryposts.members.entity.MemoryPostFamilyMembers;
 import com.example.dearfam.domain.memoryposts.members.repository.MemoryPostFamilyMembersRepository;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostFamilyMembersResponse;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostResponse;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetUpdatedPostResponse;
+import com.example.dearfam.domain.memoryposts.memorypost.controller.response.*;
 import com.example.dearfam.domain.memoryposts.memorypost.dto.MemoryPostDto;
+import com.example.dearfam.domain.memoryposts.memorypost.dto.SimpleMemoryPostDto;
 import com.example.dearfam.domain.memoryposts.memorypost.entity.MemoryPost;
 import com.example.dearfam.domain.memoryposts.memorypost.exception.MemoryPostErrorCode;
 import com.example.dearfam.domain.memoryposts.memorypost.repository.MemoryPostRepository;
@@ -24,9 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -206,4 +204,33 @@ public class MemoryPostService {
 
     @Transactional(readOnly = true)
     public List<GetRecentMemoryPostResponse> getRecentMemoryPosts(Long userId) {
+
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        Family family = user.getFamily();
+        if (family == null) {
+            throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
+        }
+
+        // memoryDate 기준 최근 10개의 데이터를 가져옴
+        List<MemoryPost> memoryPosts  = memoryPostRepository.findTop10ByFamilyOrderByMemoryDateDesc(family);
+        List<MemoryPostDto> memoryPostDtoList = MemoryPostDto.from(memoryPosts);
+
+        Map<Long, List<MemoryPostFamilyMembersDto>> participantsList = new HashMap<>();
+        Map<Long, Boolean> isLikedList = new HashMap<>();
+        for (MemoryPost memoryPost : memoryPosts) {
+            // 참여 가족 구성원 맵핑
+            List<MemoryPostFamilyMembers> members = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
+            List<MemoryPostFamilyMembersDto> memberDtoList = MemoryPostFamilyMembersDto.from(members);
+            participantsList.put(memoryPost.getId(), memberDtoList);
+
+            // 좋아요 여부 맵핑
+            boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(user, memoryPost);
+            isLikedList.put(memoryPost.getId(), isLiked);
+        }
+
+        return  GetRecentMemoryPostResponse.from(memoryPostDtoList, participantsList, isLikedList);
+    }
+
 }

@@ -4,9 +4,6 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.request.CreateMemoryPostRequest;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.request.UpdateMemoryPostRequest;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostFamilyMembersResponse;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostResponse;
-import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetUpdatedPostResponse;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.*;
 import com.example.dearfam.domain.memoryposts.memorypost.service.MemoryPostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -143,6 +140,24 @@ public class MemoryPostController {
         Long userId = jwtService.getTokenDto().getUserId();
 
         List<GetAllMemoryPostsResponse> response = memoryPostService.getAllMemoryPostsByTimeOrder(userId);
+
+        return Response.data(response);
+    }
+
+    @Operation(
+            summary = "최근 게시글 조회",
+            description = "가장 최근 게시글을 최대 10개 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "유저, 가족 정보를 찾을 수 없음."),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/recent")
+    public Response<List<GetRecentMemoryPostResponse>> getRecentMemoryPosts() {
+        Long userId = jwtService.getTokenDto().getUserId();
+
+        List<GetRecentMemoryPostResponse> response = memoryPostService.getRecentMemoryPosts(userId);
 
         return Response.data(response);
     }
