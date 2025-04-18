@@ -37,6 +37,7 @@ public class MemoryPostService {
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostFamilyMembersRepository memoryPostFamilyMembersRepository;
     private final MemoryPostLikeRepository memoryPostLikeRepository;
+    private final JwtService jwtService;
 
     @Transactional
     public GetMemoryPostResponse createMemoryPost(Long writerId, String title, String content,
@@ -179,4 +180,30 @@ public class MemoryPostService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<GetAllMemoryPostsResponse> getAllMemoryPostsByTimeOrder(Long userId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        Family family = user.getFamily();
+        if (family == null) {
+            throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
+        }
+
+        List<MemoryPost> memoryPosts = memoryPostRepository.findAllByFamilyOrderByMemoryDateDesc(family);
+        List<SimpleMemoryPostDto> posts = SimpleMemoryPostDto.from(memoryPosts);
+
+        Map<Integer, List<SimpleMemoryPostDto>> postsGroupedByYear = new TreeMap<>(Comparator.reverseOrder());
+
+        for (SimpleMemoryPostDto memoryPost : posts) {
+            if (memoryPost.getMemoryDate() == null) continue;
+            int year = memoryPost.getMemoryDate().getYear();
+            postsGroupedByYear.computeIfAbsent(year, k -> new ArrayList<>()).add(memoryPost);
+        }
+
+        return GetAllMemoryPostsResponse.from(postsGroupedByYear);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GetRecentMemoryPostResponse> getRecentMemoryPosts(Long userId) {
 }

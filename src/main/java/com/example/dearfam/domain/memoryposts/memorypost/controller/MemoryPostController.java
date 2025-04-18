@@ -7,6 +7,7 @@ import com.example.dearfam.domain.memoryposts.memorypost.controller.request.Upda
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostFamilyMembersResponse;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetMemoryPostResponse;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.GetUpdatedPostResponse;
+import com.example.dearfam.domain.memoryposts.memorypost.controller.response.*;
 import com.example.dearfam.domain.memoryposts.memorypost.service.MemoryPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -124,6 +125,24 @@ public class MemoryPostController {
         Long userId = jwtService.getTokenDto().getUserId();
 
         GetMemoryPostResponse response = memoryPostService.getMemoryPostById(userId, postId);
+
+        return Response.data(response);
+    }
+
+    @Operation(
+            summary = "전체 게시글 조회",
+            description = "시간 순서대로 전체 게시글을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "유저, 가족 정보를 찾을 수 없음."),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/time-order")
+    public Response<List<GetAllMemoryPostsResponse>> getAllMemoryPostsByTimeOrder() {
+        Long userId = jwtService.getTokenDto().getUserId();
+
+        List<GetAllMemoryPostsResponse> response = memoryPostService.getAllMemoryPostsByTimeOrder(userId);
 
         return Response.data(response);
     }

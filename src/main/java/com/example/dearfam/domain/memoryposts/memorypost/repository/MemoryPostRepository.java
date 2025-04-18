@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MemoryPostRepository extends JpaRepository<MemoryPost, Long> {
+    List<MemoryPost> findAllByFamilyOrderByMemoryDateDesc(Family family);
 }
