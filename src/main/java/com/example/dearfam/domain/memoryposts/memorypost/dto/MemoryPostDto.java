@@ -19,9 +19,9 @@ public class MemoryPostDto {
     private Long id;
     private Family family;
     private Users writer;
-    private String memoryPostsTitle;
-    private String memoryPostsContent;
-    private Integer memoryPostsCommentCount;
+    private String memoryPostTitle;
+    private String memoryPostContent;
+    private Integer memoryPostCommentCount;
     private Integer memoryPostImageCount;
     private LocalDate memoryDate;
     private LocalDateTime createdAt;
@@ -32,9 +32,9 @@ public class MemoryPostDto {
                 .id(memoryPost.getId())
                 .family(memoryPost.getFamily())
                 .writer(memoryPost.getWriter())
-                .memoryPostsTitle(memoryPost.getMemoryPostTitle())
-                .memoryPostsContent(memoryPost.getMemoryPostContent())
-                .memoryPostsCommentCount(memoryPost.getMemoryPostCommentCount())
+                .memoryPostTitle(memoryPost.getMemoryPostTitle())
+                .memoryPostContent(memoryPost.getMemoryPostContent())
+                .memoryPostCommentCount(memoryPost.getMemoryPostCommentCount())
                 .memoryPostImageCount(memoryPost.getMemoryPostImageCount())
                 .memoryDate(memoryPost.getMemoryDate())
                 .createdAt(memoryPost.getCreatedAt())
