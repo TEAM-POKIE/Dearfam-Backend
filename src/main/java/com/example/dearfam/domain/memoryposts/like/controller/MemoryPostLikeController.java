@@ -4,6 +4,7 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.memoryposts.like.service.MemoryPostLikeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +25,8 @@ public class MemoryPostLikeController {
             summary = "게시글 좋아요",
             description = "사용자가 요청한 게시글 좋아요 API. 한 번 더 누르면 좋아요 취소임",
             responses = {
-
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
             }
     )
     @PutMapping("/{postId}/like")

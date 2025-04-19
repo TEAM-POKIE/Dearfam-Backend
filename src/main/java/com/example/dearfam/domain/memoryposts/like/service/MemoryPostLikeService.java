@@ -29,24 +29,26 @@ public class MemoryPostLikeService {
         MemoryPost memoryPost = memoryPostRepository.findById(postId)
                 .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
 
-        MemoryPostLike likedInfo = memoryPostLikeRepository.findMemoryPostLikeByLikedUserAndMemoryPost(likedUser, memoryPost);
+        MemoryPostLike like = memoryPostLikeRepository.findByLikedUserAndMemoryPost(likedUser, memoryPost);
 
-        String response;
-
-        if (likedInfo == null) {
-            likedInfo = MemoryPostLike.builder()
+        if (like == null) {
+            like = MemoryPostLike.builder()
                     .likedUser(likedUser)
                     .memoryPost(memoryPost)
+                    .liked(true)
                     .build();
-
-            memoryPostLikeRepository.save(likedInfo);
-            response = "게시글에 좋아요를 눌렀습니다.";
-        } else {
-            memoryPostLikeRepository.delete(likedInfo);
-            response = "게시글의 좋아요를 취소했습니다.";
+            memoryPostLikeRepository.save(like);
+            return "좋아요를 눌렀습니다.";
         }
 
-        return response;
+        if (like.isLiked()) {
+            like.setLiked(false);
+            return "좋아요를 취소했습니다.";
+        } else {
+            like.setLiked(true);
+            return "좋아요를 다시 눌렀습니다.";
+        }
+
     }
 
 }

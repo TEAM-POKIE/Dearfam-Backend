@@ -32,10 +32,14 @@ public class MemoryPostLike extends BaseTimeEntity {
     @JoinColumn(name = "liked_user_id", nullable = false)
     private Users likedUser;
 
+    @Column(nullable = false)
+    private boolean liked;
+
     @Builder
-    public MemoryPostLike(MemoryPost memoryPost, Users likedUser) {
+    public MemoryPostLike(MemoryPost memoryPost, Users likedUser, boolean liked) {
         this.memoryPost = memoryPost;
         this.likedUser = likedUser;
+        this.liked = liked;
     }
 
 }

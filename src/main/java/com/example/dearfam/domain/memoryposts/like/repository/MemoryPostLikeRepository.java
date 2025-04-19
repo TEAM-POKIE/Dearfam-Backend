@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MemoryPostLikeRepository extends JpaRepository<MemoryPostLike, Long> {
-    MemoryPostLike findMemoryPostLikeByLikedUserAndMemoryPost(Users likedUser, MemoryPost memoryPost);
+    MemoryPostLike findByLikedUserAndMemoryPost(Users likedUser, MemoryPost memoryPost);
     boolean existsByLikedUserAndMemoryPost(Users likedUser, MemoryPost memoryPost);
 }
