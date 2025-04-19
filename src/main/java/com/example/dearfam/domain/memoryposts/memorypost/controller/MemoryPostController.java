@@ -26,7 +26,12 @@ public class MemoryPostController {
 
     @Operation(
             summary = "추억 게시글 생성",
-            description = "현재 로그인한 유저가 작성한 추억 게시글을 생성합니다."
+            description = "현재 로그인한 유저가 작성한 추억 게시글을 생성합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "작성자, 가족, 가족 구성원 정보를 찾을 수 없음."),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
     )
     @PostMapping
     public Response<GetMemoryPostResponse> createMemoryPost(@Valid @RequestBody CreateMemoryPostRequest createMemoryPostRequest) {
