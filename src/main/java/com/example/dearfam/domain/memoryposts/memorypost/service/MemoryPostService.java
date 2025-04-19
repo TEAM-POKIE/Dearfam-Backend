@@ -107,7 +107,7 @@ public class MemoryPostService {
                 .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
 
         if (!memoryPost.getWriter().getId().equals(writerId)) {
-            throw MemoryPostErrorCode.MEMORY_POST_NOT_FOUND.defaultException();
+            throw MemoryPostErrorCode.UNAUTHORIZED_MEMORY_POST_ACCESS.defaultException();
         }
 
         memoryPost.setMemoryPostTitle(title);
