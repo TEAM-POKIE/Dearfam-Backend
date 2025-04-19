@@ -35,7 +35,6 @@ public class MemoryPostService {
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostFamilyMembersRepository memoryPostFamilyMembersRepository;
     private final MemoryPostLikeRepository memoryPostLikeRepository;
-    private final JwtService jwtService;
 
     @Transactional
     public GetMemoryPostResponse createMemoryPost(Long writerId, String title, String content,
