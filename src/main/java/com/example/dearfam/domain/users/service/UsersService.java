@@ -4,9 +4,9 @@ import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
 import com.example.dearfam.domain.users.repository.UsersRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -15,7 +15,7 @@ import java.util.Optional;
 public class UsersService {
     private final UsersRepository usersRepository;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public UsersDto getUserDtoById(Long id) {
         Users user = usersRepository.findById(id)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);

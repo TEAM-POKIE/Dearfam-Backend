@@ -11,9 +11,9 @@ import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
 import com.example.dearfam.domain.users.repository.UsersRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
@@ -104,7 +104,7 @@ public class FamilyService {
     }
 
 
-    @Transactional
+    @Transactional(readOnly = true)
     public GetFamilyResponse getUserFamily(Long userId) {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
@@ -121,7 +121,7 @@ public class FamilyService {
         return GetFamilyResponse.from(familyDto, familyMembers);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public GetFamilyResponse getFamilyByFamilyId(Long familyId) {
         Family family = familyRepository.findById(familyId)
                 .orElseThrow(FamilyErrorCode.FAMILY_NOT_FOUND::defaultException);
@@ -139,18 +139,13 @@ public class FamilyService {
         List<Users> members = usersRepository.findAllByFamily(family);
 
         return members.stream()
-                .sorted(Comparator.comparing((Users u) -> {
-                    UserFamilyRole userFamilyRole = u.getUserFamilyRole();
-                    if (userFamilyRole == null) return 3; // 제일 마지막
-                    if (userFamilyRole == UserFamilyRole.FATHER) return 0;
-                    if (userFamilyRole == UserFamilyRole.MOTHER) return 1;
-                    return 2;
-                }).thenComparing(BaseTimeEntity::getCreatedAt))
-                .map(member -> FamilyMemberDto.from(
-                        member.getId(),
-                        member.getUserNickname(),
-                        member.getUserFamilyRole()
-                ))
+                .sorted(Comparator
+                        .comparing((Users u) -> {
+                            UserFamilyRole userFamilyRole = u.getUserFamilyRole();
+                            return userFamilyRole != null ? userFamilyRole.getSortOrder() : Integer.MAX_VALUE;
+                        })
+                        .thenComparing(BaseTimeEntity::getCreatedAt))
+                .map(FamilyMemberDto::from)
                 .toList();
     }
 

@@ -42,6 +42,19 @@ public record ApiResponseError(
                 .build();
     }
 
+    public static ApiResponseError of(CustomException exception, List<ApiSimpleError> validationErrors) {
+        ErrorCode errorCode = exception.getErrorCode();
+        String errorName = exception.getClass().getSimpleName();
+
+        return ApiResponseError.builder()
+                .code(errorCode.name())
+                .status(errorCode.defaultHttpStatus().value())
+                .name(errorName)
+                .message(exception.getMessage())
+                .cause(validationErrors)
+                .build();
+    }
+
     public ApiResponseError {
         if (code == null) code = "API ERROR";
         if (status == null) status = 500;
