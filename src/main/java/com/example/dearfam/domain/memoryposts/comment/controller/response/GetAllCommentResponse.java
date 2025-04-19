@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,14 +15,15 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder(access = PRIVATE)
 public class GetAllCommentResponse {
     private Long commentWriterId;
+    private String commentWriterName;
     private String content;
-    private LocalDateTime createdAt;
+    // TODO : 추후 이미지 처리 해야함.
 
     public static GetAllCommentResponse from(MemoryPostCommentDto memoryPostCommentDto) {
         return GetAllCommentResponse.builder()
                 .commentWriterId(memoryPostCommentDto.getCommentWriter().getId())
+                .commentWriterName(memoryPostCommentDto.getCommentWriter().getUserNickname())
                 .content(memoryPostCommentDto.getCommentContent())
-                .createdAt(memoryPostCommentDto.getCreatedAt())
                 .build();
     }
 
