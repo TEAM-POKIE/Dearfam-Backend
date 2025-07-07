@@ -10,7 +10,8 @@ public enum S3ErrorCode implements ErrorCode{
     EMPTY_FILE("파일이 비어 있습니다", HttpStatus.BAD_REQUEST),
     INVALID_IMAGE_MIME("이미지 MIME 타입이 아닙니다", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
     UNSUPPORTED_EXTENSION("지원하지 않는 확장자입니다", HttpStatus.BAD_REQUEST),
-    MISSING_EXTENSION("확장자가 없습니다", HttpStatus.BAD_REQUEST);
+    MISSING_EXTENSION("확장자가 없습니다", HttpStatus.BAD_REQUEST),
+    UPLOAD_FAILED("S3 업로드에 실패했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String message;
     private final HttpStatus httpStatus;
