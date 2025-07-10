@@ -3,6 +3,7 @@ package com.example.dearfam.domain.memoryposts.memorypost.entity;
 import com.example.dearfam.common.entity.BaseTimeEntity;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.memoryposts.comment.entity.MemoryPostComment;
+import com.example.dearfam.domain.memoryposts.image.entity.MemoryPostImage;
 import com.example.dearfam.domain.memoryposts.like.entity.MemoryPostLike;
 import com.example.dearfam.domain.memoryposts.members.entity.MemoryPostFamilyMembers;
 import com.example.dearfam.domain.users.entity.Users;
@@ -51,7 +52,8 @@ public class MemoryPost extends BaseTimeEntity {
     @Column(name = "memory_date", nullable = false)
     private LocalDate memoryDate;
 
-    // TODO : 이미지 엔티티 만들고, OneToMany 로 추가하기
+    @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemoryPostImage> memoryPostImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemoryPostComment> memoryPostComments = new ArrayList<>();
@@ -72,6 +74,12 @@ public class MemoryPost extends BaseTimeEntity {
         this.memoryPostCommentCount = memoryPostCommentCount == null ? 0 : memoryPostCommentCount;
         this.memoryPostImageCount = memoryPostImageCount == null ? 0 : memoryPostImageCount;
         this.memoryDate = memoryDate;
+    }
+
+    // 양방향 관계 설정
+    public void addImage(MemoryPostImage image) {
+        this.memoryPostImages.add(image);
+        image.setMemoryPost(this);
     }
 
 }
