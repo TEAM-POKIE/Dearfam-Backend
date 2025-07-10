@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.memoryposts.memorypost.controller;
 
 import com.example.dearfam.common.dto.response.Response;
+import com.example.dearfam.common.exception.errorcode.S3ErrorCode;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.request.CreateMemoryPostRequest;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.request.UpdateMemoryPostRequest;
@@ -11,11 +12,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/memory-post")
@@ -33,21 +38,24 @@ public class MemoryPostController {
                     @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
             }
     )
-    @PostMapping
-    public Response<GetMemoryPostResponse> createMemoryPost(@Valid @RequestBody CreateMemoryPostRequest createMemoryPostRequest) {
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public Response<GetMemoryPostResponse> createMemoryPost(
+            @Valid @RequestPart("request") CreateMemoryPostRequest createMemoryPostRequest,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+
+        // 이미지 개수 제한
+        if (images != null && images.size() > 10) {
+            log.error("이미지는 최대 10개까지 업로드 가능합니다.");
+            throw S3ErrorCode.IMAGE_LIMIT_EXCEEDED.defaultException();
+        }
+
         // 로그인한 유저가 게시글을 올리면, writer 는 현재 로그인한 유저임.
         Long writerId = jwtService.getTokenDto().getUserId();
-        String title = createMemoryPostRequest.getTitle();
-        String content = createMemoryPostRequest.getContent();
-        LocalDate memoryDate = createMemoryPostRequest.getMemoryDate();
-        List<Long> participantFamilyMemberIds = createMemoryPostRequest.getParticipantFamilyMemberIds();
 
         GetMemoryPostResponse response = memoryPostService.createMemoryPost(
                 writerId,
-                title,
-                content,
-                memoryDate,
-                participantFamilyMemberIds
+                createMemoryPostRequest,
+                images
                 );
 
         return Response.data(response);

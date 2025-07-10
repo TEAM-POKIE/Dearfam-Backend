@@ -1,13 +1,17 @@
 package com.example.dearfam.domain.memoryposts.memorypost.service;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
-import com.example.dearfam.common.jwt.auth.JwtService;
+import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
+import com.example.dearfam.domain.memoryposts.image.dto.MemoryPostImageDto;
+import com.example.dearfam.domain.memoryposts.image.entity.MemoryPostImage;
+import com.example.dearfam.domain.memoryposts.image.repository.MemoryPostImageRepository;
 import com.example.dearfam.domain.memoryposts.like.repository.MemoryPostLikeRepository;
 import com.example.dearfam.domain.memoryposts.members.dto.MemoryPostFamilyMembersDto;
 import com.example.dearfam.domain.memoryposts.members.entity.MemoryPostFamilyMembers;
 import com.example.dearfam.domain.memoryposts.members.repository.MemoryPostFamilyMembersRepository;
+import com.example.dearfam.domain.memoryposts.memorypost.controller.request.CreateMemoryPostRequest;
 import com.example.dearfam.domain.memoryposts.memorypost.controller.response.*;
 import com.example.dearfam.domain.memoryposts.memorypost.dto.MemoryPostDto;
 import com.example.dearfam.domain.memoryposts.memorypost.dto.SimpleMemoryPostDto;
@@ -20,14 +24,17 @@ import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
 import com.example.dearfam.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemoryPostService {
@@ -35,10 +42,16 @@ public class MemoryPostService {
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostFamilyMembersRepository memoryPostFamilyMembersRepository;
     private final MemoryPostLikeRepository memoryPostLikeRepository;
+    private final S3Service s3Service;
+    private final MemoryPostImageRepository memoryPostImageRepository;
 
     @Transactional
-    public GetMemoryPostResponse createMemoryPost(Long writerId, String title, String content,
-                                                  LocalDate memoryDate, List<Long> participantFamilyMemberIds) {
+    public GetMemoryPostResponse createMemoryPost(Long writerId, CreateMemoryPostRequest requestDto, List<MultipartFile> images) {
+
+        String title = requestDto.getTitle();
+        String content = requestDto.getContent();
+        LocalDate memoryDate = requestDto.getMemoryDate();
+        List<Long> participantFamilyMemberIds = requestDto.getParticipantFamilyMemberIds();
 
         Users writer = usersRepository.findById(writerId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
@@ -48,8 +61,6 @@ public class MemoryPostService {
             throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
         }
 
-        // TODO : 추후 이미지 저장 로직 여기서 추가 구현 후 memoryPostRepository save 하는 순서가 맞음.
-
         MemoryPost memoryPost = MemoryPost.builder()
                 .writer(writer)
                 .family(family)
@@ -57,12 +68,33 @@ public class MemoryPostService {
                 .memoryPostContent(content)
                 .memoryDate(memoryDate)
                 .build();
-
         // 생성한 게시글 저장
         memoryPostRepository.save(memoryPost);
+        log.info("게시글 생성 완료");
 
+
+        List<MemoryPostImageDto> imageDtos = new ArrayList<>();
+        // 이미지 S3에 저장 후 DB에 URL 과 순서 저장
+        if (images != null && !images.isEmpty()) {
+            log.info("이미지 null 값 아님");
+            for (int i = 0; i < images.size(); i++) {
+                String imageKey = s3Service.uploadPostImages(images.get(i), memoryPost.getId());
+                String imageUrl = s3Service.generateUrlFromKey(imageKey);
+                MemoryPostImage image = MemoryPostImage.builder()
+                        .imageKey(imageKey)
+                        .imageOrder(i + 1)
+                        .build();
+
+                memoryPost.addImage(image); // 연관관계 양방향 설정
+                imageDtos.add(MemoryPostImageDto.from(image, imageUrl));
+            }
+            memoryPost.setMemoryPostImageCount(memoryPost.getMemoryPostImages().size());
+            memoryPostRepository.save(memoryPost); // Cascade 설정돼 있으면 이미지도 저장됨
+            log.info("이미지 저장 완료");
+        }
+
+        // 게시글에 참여한 가족 구성원 저장
         List<MemoryPostFamilyMembers> memoryPostFamilyMembers = List.of();
-
         if (participantFamilyMemberIds != null && !participantFamilyMemberIds.isEmpty()) {
             // 현재 가족 구성원 조회
             List<Users> familyMembers = usersRepository.findAllByFamilyId(family.getId());
@@ -85,18 +117,14 @@ public class MemoryPostService {
                                 .build();
                     })
                     .toList();
-
-            // 게시글에 참여한 가족 구성원 저장
             memoryPostFamilyMembersRepository.saveAll(memoryPostFamilyMembers);
         }
 
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
-
         List<MemoryPostFamilyMembersDto> membersDtos = MemoryPostFamilyMembersDto.from(memoryPostFamilyMembers);
-
         boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(writer, memoryPost);
 
-        return GetMemoryPostResponse.from(memoryPostDto, membersDtos, isLiked);
+        return GetMemoryPostResponse.from(memoryPostDto, membersDtos, imageDtos, isLiked);
     }
 
     @Transactional
@@ -127,7 +155,20 @@ public class MemoryPostService {
         if (!memoryPost.getWriter().getId().equals(writerId)) {
             throw MemoryPostErrorCode.UNAUTHORIZED_MEMORY_POST_ACCESS.defaultException();
         }
+
+        List<MemoryPostImage> images = memoryPost.getMemoryPostImages();
+        for (MemoryPostImage img: images) {
+            String key = img.getImageKey();
+            if (key != null) {
+                log.info("이미지 삭제 요청");
+                s3Service.delete(key);
+            } else {
+                log.warn("이미지의 key 값이 null입니다. postId={}, imageId={}", memoryPost.getId(), img.getId());
+            }
+        }
+
         memoryPostRepository.delete(memoryPost);
+        log.info("게시글 삭제 완료");
     }
 
     @Transactional(readOnly = true)
@@ -171,9 +212,13 @@ public class MemoryPostService {
             throw MemoryPostErrorCode.UNAUTHORIZED_FAMILY_ACCESS.defaultException();
         }
 
+        List<MemoryPostImageDto> imageDtos = memoryPost.getMemoryPostImages().stream()
+                .map(img -> MemoryPostImageDto.from(img, s3Service.generateUrlFromKey(img.getImageKey())))
+                .toList();
+
         boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(user, memoryPost);
 
-        return GetMemoryPostResponse.from(memoryPostDto, participants, isLiked);
+        return GetMemoryPostResponse.from(memoryPostDto, participants, imageDtos, isLiked);
     }
 
 
