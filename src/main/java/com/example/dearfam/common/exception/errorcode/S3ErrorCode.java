@@ -11,7 +11,8 @@ public enum S3ErrorCode implements ErrorCode{
     INVALID_IMAGE_MIME("이미지 MIME 타입이 아닙니다", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
     UNSUPPORTED_EXTENSION("지원하지 않는 확장자입니다", HttpStatus.BAD_REQUEST),
     MISSING_EXTENSION("확장자가 없습니다", HttpStatus.BAD_REQUEST),
-    UPLOAD_FAILED("S3 업로드에 실패했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
+    UPLOAD_FAILED("S3 업로드에 실패했습니다", HttpStatus.INTERNAL_SERVER_ERROR),
+    IMAGE_LIMIT_EXCEEDED("이미지는 최대 10개까지 업로드 가능합니다", HttpStatus.BAD_REQUEST);
 
     private final String message;
     private final HttpStatus httpStatus;
