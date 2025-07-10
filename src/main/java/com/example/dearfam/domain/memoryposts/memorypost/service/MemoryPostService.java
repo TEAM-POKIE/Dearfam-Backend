@@ -155,7 +155,20 @@ public class MemoryPostService {
         if (!memoryPost.getWriter().getId().equals(writerId)) {
             throw MemoryPostErrorCode.UNAUTHORIZED_MEMORY_POST_ACCESS.defaultException();
         }
+
+        List<MemoryPostImage> images = memoryPost.getMemoryPostImages();
+        for (MemoryPostImage img: images) {
+            String key = img.getImageKey();
+            if (key != null) {
+                log.info("이미지 삭제 요청");
+                s3Service.delete(key);
+            } else {
+                log.warn("이미지의 key 값이 null입니다. postId={}, imageId={}", memoryPost.getId(), img.getId());
+            }
+        }
+
         memoryPostRepository.delete(memoryPost);
+        log.info("게시글 삭제 완료");
     }
 
     @Transactional(readOnly = true)
