@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
@@ -56,6 +57,20 @@ public class S3Service {
         }
 
         return key;
+    }
+
+    public void delete(String key) {
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("S3 이미지 삭제 성공 - key: {}", key);
+        } catch (SdkException e) {
+            log.error("S3 이미지 삭제 실패 - key: {}", key, e);
+            throw S3ErrorCode.DELETE_FAILED.defaultException(e);
+        }
     }
 
     public String generateUrlFromKey(String key) {
