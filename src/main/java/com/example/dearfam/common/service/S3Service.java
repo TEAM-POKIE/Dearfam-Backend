@@ -30,7 +30,7 @@ public class S3Service {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
 
-    public String upload(MultipartFile file, Long postId) {
+    public String uploadPostImages(MultipartFile file, Long postId) {
         //1. 파일 유효성 검사하기
         validateImageFile(file);
 
