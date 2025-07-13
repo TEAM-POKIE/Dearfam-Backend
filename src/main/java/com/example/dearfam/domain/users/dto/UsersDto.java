@@ -25,23 +25,4 @@ public class UsersDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static UsersDto from(Users user) {
-        return UsersDto.builder()
-                .id(user.getId())
-                .family(user.getFamily())
-                .userNickName(user.getUserNickname())
-                .userRole(user.getUserRole())
-                .userFamilyRole(user.getUserFamilyRole())
-                .isFamilyRoomManager(user.getIsFamilyRoomManager())
-                .profileImage(user.getProfileImage())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-    }
-
-    public static List<UsersDto> from(List<Users> users) {
-        return users.stream()
-                .map(UsersDto::from)
-                .collect(Collectors.toList());
-    }
 }

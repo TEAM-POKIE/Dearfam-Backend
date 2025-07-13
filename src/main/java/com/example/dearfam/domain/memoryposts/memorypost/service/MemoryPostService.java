@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.memoryposts.memorypost.service;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.common.entity.UploadDirectory;
 import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
@@ -22,6 +23,7 @@ import com.example.dearfam.domain.users.dto.FamilyMemberDto;
 import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
+import com.example.dearfam.domain.users.mapper.UsersMapper;
 import com.example.dearfam.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemoryPostService {
     private final UsersRepository usersRepository;
+    private final UsersMapper usersMapper;
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostFamilyMembersRepository memoryPostFamilyMembersRepository;
     private final MemoryPostLikeRepository memoryPostLikeRepository;
@@ -75,10 +78,12 @@ public class MemoryPostService {
 
         List<MemoryPostImageDto> imageDtos = new ArrayList<>();
         // 이미지 S3에 저장 후 DB에 URL 과 순서 저장
-        if (images != null && !images.isEmpty()) {
+        boolean hasValidImages = images != null &&
+                images.stream().anyMatch(file -> file != null && !file.isEmpty());
+        if (hasValidImages) {
             log.info("이미지 null 값 아님");
             for (int i = 0; i < images.size(); i++) {
-                String imageKey = s3Service.uploadPostImages(images.get(i), memoryPost.getId());
+                String imageKey = s3Service.upload(images.get(i), UploadDirectory.POSTS,memoryPost.getId());
                 String imageUrl = s3Service.generateUrlFromKey(imageKey);
                 MemoryPostImage image = MemoryPostImage.builder()
                         .imageKey(imageKey)
@@ -121,7 +126,10 @@ public class MemoryPostService {
         }
 
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
-        List<MemoryPostFamilyMembersDto> membersDtos = MemoryPostFamilyMembersDto.from(memoryPostFamilyMembers);
+        List<MemoryPostFamilyMembersDto> membersDtos = memoryPostFamilyMembers.stream()
+                .map(usersMapper::toMemoryPostFamilyMembersDto)
+                .toList();
+
         boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(writer, memoryPost);
 
         return GetMemoryPostResponse.from(memoryPostDto, membersDtos, imageDtos, isLiked);
@@ -186,7 +194,7 @@ public class MemoryPostService {
                             return userFamilyRole != null ? userFamilyRole.getSortOrder() : Integer.MAX_VALUE;
                         })
                         .thenComparing(BaseTimeEntity::getCreatedAt))
-                .map(FamilyMemberDto::from)
+                .map(usersMapper::toFamilyMemberDto)
                 .toList();
 
 
@@ -202,7 +210,9 @@ public class MemoryPostService {
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
 
         List<MemoryPostFamilyMembers> familyMembers = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
-        List<MemoryPostFamilyMembersDto> participants = MemoryPostFamilyMembersDto.from(familyMembers);
+        List<MemoryPostFamilyMembersDto> participants = familyMembers.stream()
+                .map(usersMapper::toMemoryPostFamilyMembersDto)
+                .toList();
 
         Users user = usersRepository.findById(userId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
@@ -232,8 +242,20 @@ public class MemoryPostService {
             throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
         }
 
-        List<MemoryPost> memoryPosts = memoryPostRepository.findAllByFamilyOrderByMemoryDateDesc(family);
-        List<SimpleMemoryPostDto> posts = SimpleMemoryPostDto.from(memoryPosts);
+        List<MemoryPost> memoryPosts = memoryPostRepository.findAllByFamilyOrderByMemoryDateDescCreatedAtDesc(family);
+        List<SimpleMemoryPostDto> posts = memoryPosts.stream()
+                .map(post -> {
+                    String imageKey = post.getMemoryPostImages().stream()
+                            .filter(img -> img.getImageOrder() == 1)
+                            .map(MemoryPostImage::getImageKey)
+                            .findFirst()
+                            .orElse(null);
+
+                    String imageUrl = imageKey != null ? s3Service.generateUrlFromKey(imageKey) : null;
+
+                    return SimpleMemoryPostDto.from(post, imageUrl);
+                })
+                .toList();
 
         Map<Integer, List<SimpleMemoryPostDto>> postsGroupedByYear = new TreeMap<>(Comparator.reverseOrder());
 
@@ -258,23 +280,36 @@ public class MemoryPostService {
         }
 
         // memoryDate 기준 최근 10개의 데이터를 가져옴
-        List<MemoryPost> memoryPosts  = memoryPostRepository.findTop10ByFamilyOrderByMemoryDateDesc(family);
+        List<MemoryPost> memoryPosts  = memoryPostRepository.findTop10ByFamilyOrderByMemoryDateDescCreatedAtDesc(family);
         List<MemoryPostDto> memoryPostDtoList = MemoryPostDto.from(memoryPosts);
 
-        Map<Long, List<MemoryPostFamilyMembersDto>> participantsList = new HashMap<>();
-        Map<Long, Boolean> isLikedList = new HashMap<>();
+        Map<Long, List<MemoryPostFamilyMembersDto>> participantsMap = new HashMap<>();
+        Map<Long, Boolean> isLikedMap = new HashMap<>();
+        Map<Long, String> thumbnailUrlMap = new HashMap<>();
+
         for (MemoryPost memoryPost : memoryPosts) {
             // 참여 가족 구성원 맵핑
             List<MemoryPostFamilyMembers> members = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
-            List<MemoryPostFamilyMembersDto> memberDtoList = MemoryPostFamilyMembersDto.from(members);
-            participantsList.put(memoryPost.getId(), memberDtoList);
+            List<MemoryPostFamilyMembersDto> memberDtoList = members.stream()
+                    .map(usersMapper::toMemoryPostFamilyMembersDto)
+                    .toList();
+            participantsMap.put(memoryPost.getId(), memberDtoList);
 
             // 좋아요 여부 맵핑
             boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(user, memoryPost);
-            isLikedList.put(memoryPost.getId(), isLiked);
+            isLikedMap.put(memoryPost.getId(), isLiked);
+
+            // 썸네일 URL 추출 및 매핑
+            String thumbnailUrl = memoryPost.getMemoryPostImages().stream()
+                    .filter(img -> img.getImageOrder() != null && img.getImageOrder() == 1)
+                    .findFirst()
+                    .map(MemoryPostImage::getImageKey)
+                    .map(s3Service::generateUrlFromKey)
+                    .orElse(null);
+            thumbnailUrlMap.put(memoryPost.getId(), thumbnailUrl);
         }
 
-        return  GetRecentMemoryPostResponse.from(memoryPostDtoList, participantsList, isLikedList);
+        return  GetRecentMemoryPostResponse.from(memoryPostDtoList, participantsMap, thumbnailUrlMap, isLikedMap);
     }
 
 }
