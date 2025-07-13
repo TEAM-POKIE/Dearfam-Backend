@@ -239,6 +239,19 @@ public class MemoryPostService {
 
         List<MemoryPost> memoryPosts = memoryPostRepository.findAllByFamilyOrderByMemoryDateDesc(family);
         List<SimpleMemoryPostDto> posts = SimpleMemoryPostDto.from(memoryPosts);
+        List<SimpleMemoryPostDto> posts = memoryPosts.stream()
+                .map(post -> {
+                    String imageKey = post.getMemoryPostImages().stream()
+                            .filter(img -> img.getImageOrder() == 1)
+                            .map(MemoryPostImage::getImageKey)
+                            .findFirst()
+                            .orElse(null);
+
+                    String imageUrl = imageKey != null ? s3Service.generateUrlFromKey(imageKey) : null;
+
+                    return SimpleMemoryPostDto.from(post, imageUrl);
+                })
+                .toList();
 
         Map<Integer, List<SimpleMemoryPostDto>> postsGroupedByYear = new TreeMap<>(Comparator.reverseOrder());
 
