@@ -5,6 +5,7 @@ import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
+import com.example.dearfam.domain.users.mapper.UsersMapper;
 import com.example.dearfam.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +21,14 @@ import java.util.Optional;
 public class UsersService {
     private final UsersRepository usersRepository;
     private final S3Service s3Service;
+    private final UsersMapper usersMapper;
 
     @Transactional(readOnly = true)
     public UsersDto getUserDtoById(Long id) {
         Users user = usersRepository.findById(id)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
 
-        return UsersDto.from(user);
+        return usersMapper.toDto(user);
     }
 
     @Transactional
