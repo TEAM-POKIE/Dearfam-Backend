@@ -129,6 +129,10 @@ public class MemoryPostService {
 
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
         List<MemoryPostFamilyMembersDto> membersDtos = MemoryPostFamilyMembersDto.from(memoryPostFamilyMembers);
+        List<MemoryPostFamilyMembersDto> membersDtos = memoryPostFamilyMembers.stream()
+                .map(usersMapper::toMemoryPostFamilyMembersDto)
+                .toList();
+
         boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(writer, memoryPost);
 
         return GetMemoryPostResponse.from(memoryPostDto, membersDtos, imageDtos, isLiked);
@@ -211,6 +215,9 @@ public class MemoryPostService {
 
         List<MemoryPostFamilyMembers> familyMembers = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
         List<MemoryPostFamilyMembersDto> participants = MemoryPostFamilyMembersDto.from(familyMembers);
+        List<MemoryPostFamilyMembersDto> participants = familyMembers.stream()
+                .map(usersMapper::toMemoryPostFamilyMembersDto)
+                .toList();
 
         Users user = usersRepository.findById(userId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
@@ -284,18 +291,35 @@ public class MemoryPostService {
 
         Map<Long, List<MemoryPostFamilyMembersDto>> participantsList = new HashMap<>();
         Map<Long, Boolean> isLikedList = new HashMap<>();
+        Map<Long, List<MemoryPostFamilyMembersDto>> participantsMap = new HashMap<>();
+        Map<Long, Boolean> isLikedMap = new HashMap<>();
+        Map<Long, String> thumbnailUrlMap = new HashMap<>();
+
         for (MemoryPost memoryPost : memoryPosts) {
             // 참여 가족 구성원 맵핑
             List<MemoryPostFamilyMembers> members = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
             List<MemoryPostFamilyMembersDto> memberDtoList = MemoryPostFamilyMembersDto.from(members);
             participantsList.put(memoryPost.getId(), memberDtoList);
+            List<MemoryPostFamilyMembersDto> memberDtoList = members.stream()
+                    .map(usersMapper::toMemoryPostFamilyMembersDto)
+                    .toList();
+            participantsMap.put(memoryPost.getId(), memberDtoList);
 
             // 좋아요 여부 맵핑
             boolean isLiked = memoryPostLikeRepository.existsByLikedUserAndMemoryPost(user, memoryPost);
-            isLikedList.put(memoryPost.getId(), isLiked);
+            isLikedMap.put(memoryPost.getId(), isLiked);
+
+            // 썸네일 URL 추출 및 매핑
+            String thumbnailUrl = memoryPost.getMemoryPostImages().stream()
+                    .filter(img -> img.getImageOrder() != null && img.getImageOrder() == 1)
+                    .findFirst()
+                    .map(MemoryPostImage::getImageKey)
+                    .map(s3Service::generateUrlFromKey)
+                    .orElse(null);
+            thumbnailUrlMap.put(memoryPost.getId(), thumbnailUrl);
         }
 
-        return  GetRecentMemoryPostResponse.from(memoryPostDtoList, participantsList, isLikedList);
+        return  GetRecentMemoryPostResponse.from(memoryPostDtoList, participantsMap, thumbnailUrlMap, isLikedMap);
     }
 
 }

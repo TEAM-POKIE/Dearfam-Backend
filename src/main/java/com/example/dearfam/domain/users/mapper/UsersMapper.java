@@ -1,6 +1,8 @@
 package com.example.dearfam.domain.users.mapper;
 
 import com.example.dearfam.common.service.S3Service;
+import com.example.dearfam.domain.memoryposts.members.dto.MemoryPostFamilyMembersDto;
+import com.example.dearfam.domain.memoryposts.members.entity.MemoryPostFamilyMembers;
 import com.example.dearfam.domain.users.dto.FamilyMemberDto;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.entity.Users;
@@ -38,6 +40,14 @@ public class UsersMapper {
                 .build();
     }
 
+    public MemoryPostFamilyMembersDto toMemoryPostFamilyMembersDto(MemoryPostFamilyMembers memoryPostFamilyMembers) {
+        Users user = memoryPostFamilyMembers.getJoinedFamilyMember();
+        return MemoryPostFamilyMembersDto.builder()
+                .familyMemberId(user.getId())
+                .nickname(user.getUserNickname())
+                .profileImage(resolveProfileImageUrl(user.getProfileImage()))
+                .build();
+    }
 
     // 카카오 이미지인지, 사용자 설정 이미지인지 검사 - http 로 시작 시 카카오/profile 로 시작 시 사용자 설정 이미지
     private String resolveProfileImageUrl(String image) {

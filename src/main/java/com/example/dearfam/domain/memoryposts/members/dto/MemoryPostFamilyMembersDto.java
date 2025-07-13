@@ -18,7 +18,7 @@ public class MemoryPostFamilyMembersDto {
 
     private Long familyMemberId;
     private String nickname;
-    // TODO : 참여한 가족의 프로필 이미지를 건네줘야함
+    private String profileImage;
 
     public static MemoryPostFamilyMembersDto from(MemoryPostFamilyMembers memoryPostFamilyMembers) {
         return MemoryPostFamilyMembersDto.builder()
