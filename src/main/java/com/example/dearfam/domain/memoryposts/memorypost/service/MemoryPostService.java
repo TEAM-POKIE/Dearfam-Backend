@@ -78,13 +78,11 @@ public class MemoryPostService {
 
         List<MemoryPostImageDto> imageDtos = new ArrayList<>();
         // 이미지 S3에 저장 후 DB에 URL 과 순서 저장
-        if (images != null && !images.isEmpty()) {
         boolean hasValidImages = images != null &&
                 images.stream().anyMatch(file -> file != null && !file.isEmpty());
         if (hasValidImages) {
             log.info("이미지 null 값 아님");
             for (int i = 0; i < images.size(); i++) {
-                String imageKey = s3Service.uploadPostImages(images.get(i), memoryPost.getId());
                 String imageKey = s3Service.upload(images.get(i), UploadDirectory.POSTS,memoryPost.getId());
                 String imageUrl = s3Service.generateUrlFromKey(imageKey);
                 MemoryPostImage image = MemoryPostImage.builder()
@@ -128,7 +126,6 @@ public class MemoryPostService {
         }
 
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
-        List<MemoryPostFamilyMembersDto> membersDtos = MemoryPostFamilyMembersDto.from(memoryPostFamilyMembers);
         List<MemoryPostFamilyMembersDto> membersDtos = memoryPostFamilyMembers.stream()
                 .map(usersMapper::toMemoryPostFamilyMembersDto)
                 .toList();
@@ -197,7 +194,6 @@ public class MemoryPostService {
                             return userFamilyRole != null ? userFamilyRole.getSortOrder() : Integer.MAX_VALUE;
                         })
                         .thenComparing(BaseTimeEntity::getCreatedAt))
-                .map(FamilyMemberDto::from)
                 .map(usersMapper::toFamilyMemberDto)
                 .toList();
 
@@ -214,7 +210,6 @@ public class MemoryPostService {
         MemoryPostDto memoryPostDto = MemoryPostDto.from(memoryPost);
 
         List<MemoryPostFamilyMembers> familyMembers = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
-        List<MemoryPostFamilyMembersDto> participants = MemoryPostFamilyMembersDto.from(familyMembers);
         List<MemoryPostFamilyMembersDto> participants = familyMembers.stream()
                 .map(usersMapper::toMemoryPostFamilyMembersDto)
                 .toList();
@@ -247,8 +242,7 @@ public class MemoryPostService {
             throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
         }
 
-        List<MemoryPost> memoryPosts = memoryPostRepository.findAllByFamilyOrderByMemoryDateDesc(family);
-        List<SimpleMemoryPostDto> posts = SimpleMemoryPostDto.from(memoryPosts);
+        List<MemoryPost> memoryPosts = memoryPostRepository.findAllByFamilyOrderByMemoryDateDescCreatedAtDesc(family);
         List<SimpleMemoryPostDto> posts = memoryPosts.stream()
                 .map(post -> {
                     String imageKey = post.getMemoryPostImages().stream()
@@ -286,11 +280,9 @@ public class MemoryPostService {
         }
 
         // memoryDate 기준 최근 10개의 데이터를 가져옴
-        List<MemoryPost> memoryPosts  = memoryPostRepository.findTop10ByFamilyOrderByMemoryDateDesc(family);
+        List<MemoryPost> memoryPosts  = memoryPostRepository.findTop10ByFamilyOrderByMemoryDateDescCreatedAtDesc(family);
         List<MemoryPostDto> memoryPostDtoList = MemoryPostDto.from(memoryPosts);
 
-        Map<Long, List<MemoryPostFamilyMembersDto>> participantsList = new HashMap<>();
-        Map<Long, Boolean> isLikedList = new HashMap<>();
         Map<Long, List<MemoryPostFamilyMembersDto>> participantsMap = new HashMap<>();
         Map<Long, Boolean> isLikedMap = new HashMap<>();
         Map<Long, String> thumbnailUrlMap = new HashMap<>();
@@ -298,8 +290,6 @@ public class MemoryPostService {
         for (MemoryPost memoryPost : memoryPosts) {
             // 참여 가족 구성원 맵핑
             List<MemoryPostFamilyMembers> members = memoryPostFamilyMembersRepository.findAllByMemoryPost(memoryPost);
-            List<MemoryPostFamilyMembersDto> memberDtoList = MemoryPostFamilyMembersDto.from(members);
-            participantsList.put(memoryPost.getId(), memberDtoList);
             List<MemoryPostFamilyMembersDto> memberDtoList = members.stream()
                     .map(usersMapper::toMemoryPostFamilyMembersDto)
                     .toList();

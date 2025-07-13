@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface MemoryPostRepository extends JpaRepository<MemoryPost, Long> {
-    List<MemoryPost> findAllByFamilyOrderByMemoryDateDesc(Family family);
-    List<MemoryPost> findTop10ByFamilyOrderByMemoryDateDesc(Family family);
+    List<MemoryPost> findAllByFamilyOrderByMemoryDateDescCreatedAtDesc(Family family);
+    List<MemoryPost> findTop10ByFamilyOrderByMemoryDateDescCreatedAtDesc(Family family);
 }
