@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.users.mapper;
 
 import com.example.dearfam.common.service.S3Service;
+import com.example.dearfam.domain.users.dto.FamilyMemberDto;
 import com.example.dearfam.domain.users.dto.UsersDto;
 import com.example.dearfam.domain.users.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,15 @@ public class UsersMapper {
                 .profileImage(resolveProfileImageUrl(user.getProfileImage()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+
+    public FamilyMemberDto toFamilyMemberDto(Users familyMember) {
+        return FamilyMemberDto.builder()
+                .familyMemberId(familyMember.getId())
+                .familyMemberNickname(familyMember.getUserNickname())
+                .familyMemberRole(familyMember.getUserFamilyRole())
+                .familyMemberProfileImage(resolveProfileImageUrl(familyMember.getProfileImage()))
                 .build();
     }
 

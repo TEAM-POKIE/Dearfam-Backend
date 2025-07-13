@@ -23,6 +23,7 @@ import com.example.dearfam.domain.users.dto.FamilyMemberDto;
 import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
+import com.example.dearfam.domain.users.mapper.UsersMapper;
 import com.example.dearfam.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemoryPostService {
     private final UsersRepository usersRepository;
+    private final UsersMapper usersMapper;
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostFamilyMembersRepository memoryPostFamilyMembersRepository;
     private final MemoryPostLikeRepository memoryPostLikeRepository;
@@ -192,6 +194,7 @@ public class MemoryPostService {
                         })
                         .thenComparing(BaseTimeEntity::getCreatedAt))
                 .map(FamilyMemberDto::from)
+                .map(usersMapper::toFamilyMemberDto)
                 .toList();
 
 

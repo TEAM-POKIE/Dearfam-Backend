@@ -10,6 +10,7 @@ import com.example.dearfam.domain.users.dto.FamilyMemberDto;
 import com.example.dearfam.domain.users.entity.UserFamilyRole;
 import com.example.dearfam.domain.users.entity.Users;
 import com.example.dearfam.domain.users.exception.UsersErrorCode;
+import com.example.dearfam.domain.users.mapper.UsersMapper;
 import com.example.dearfam.domain.users.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.List;
 public class FamilyService {
     private final FamilyRepository familyRepository;
     private final UsersRepository usersRepository;
+    private final UsersMapper usersMapper;
 
     @Transactional
     public FamilyDto createFamily(String familyName, Long userId) {
@@ -145,7 +147,7 @@ public class FamilyService {
                             return userFamilyRole != null ? userFamilyRole.getSortOrder() : Integer.MAX_VALUE;
                         })
                         .thenComparing(BaseTimeEntity::getCreatedAt))
-                .map(FamilyMemberDto::from)
+                .map(usersMapper::toFamilyMemberDto)
                 .toList();
     }
 
