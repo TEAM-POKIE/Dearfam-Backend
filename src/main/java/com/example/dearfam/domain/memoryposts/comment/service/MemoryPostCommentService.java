@@ -1,8 +1,10 @@
 package com.example.dearfam.domain.memoryposts.comment.service;
 
-import com.example.dearfam.domain.memoryposts.comment.dto.MemoryPostCommentDto;
+import com.example.dearfam.domain.memoryposts.comment.controller.response.GetAllCommentResponse;
+import com.example.dearfam.domain.memoryposts.comment.controller.response.GetCreatedCommentResponse;
 import com.example.dearfam.domain.memoryposts.comment.entity.MemoryPostComment;
 import com.example.dearfam.domain.memoryposts.comment.exception.MemoryPostCommentErrorCode;
+import com.example.dearfam.domain.memoryposts.comment.mapper.MemoryPostCommentMapper;
 import com.example.dearfam.domain.memoryposts.comment.repository.MemoryPostCommentRepository;
 import com.example.dearfam.domain.memoryposts.memorypost.entity.MemoryPost;
 import com.example.dearfam.domain.memoryposts.memorypost.exception.MemoryPostErrorCode;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -24,15 +26,21 @@ public class MemoryPostCommentService {
     private final UsersRepository usersRepository;
     private final MemoryPostRepository memoryPostRepository;
     private final MemoryPostCommentRepository memoryPostCommentRepository;
+    private final MemoryPostCommentMapper memoryPostCommentMapper;
 
     @Transactional
-    public MemoryPostCommentDto createMemoryPostComment(Long writerId, Long postId, String commentContent) {
+    public GetCreatedCommentResponse createMemoryPostComment(Long writerId, Long postId, String commentContent) {
 
         Users writer = usersRepository.findById(writerId)
                 .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
 
         MemoryPost memoryPost = memoryPostRepository.findById(postId)
                 .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
+
+        // 같은 가족의 게시글인지를 검사
+        if (writer.getFamily() == null || !Objects.equals(writer.getFamily().getId(), memoryPost.getFamily().getId())) {
+            throw MemoryPostErrorCode.UNAUTHORIZED_FAMILY_ACCESS.defaultException();
+        }
 
         MemoryPostComment memoryPostComment = MemoryPostComment.builder()
                 .memoryPost(memoryPost)
@@ -43,10 +51,8 @@ public class MemoryPostCommentService {
         memoryPostCommentRepository.save(memoryPostComment);
 
         memoryPost.setMemoryPostCommentCount(memoryPost.getMemoryPostCommentCount() + 1);
-        memoryPostRepository.save(memoryPost);
 
-
-        return MemoryPostCommentDto.from(memoryPostComment);
+        return memoryPostCommentMapper.toGetCreatedCommentResponse(memoryPostComment);
     }
 
     @Transactional
@@ -68,7 +74,7 @@ public class MemoryPostCommentService {
     }
 
     @Transactional(readOnly = true)
-    public List<MemoryPostCommentDto> getCommentsFromMemoryPost(Long postId) {
+    public List<GetAllCommentResponse> getCommentsFromMemoryPost(Long postId) {
 
         MemoryPost memoryPost = memoryPostRepository.findById(postId)
                 .orElseThrow(MemoryPostErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
@@ -77,8 +83,8 @@ public class MemoryPostCommentService {
                 .findAllByMemoryPostOrderByCreatedAtAsc(memoryPost);
 
         return comments.stream()
-                .map(MemoryPostCommentDto::from)
-                .collect(Collectors.toList());
+                .map(memoryPostCommentMapper::toGetAllCommentResponse)
+                .toList();
     }
 
 }

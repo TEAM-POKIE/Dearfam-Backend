@@ -5,7 +5,6 @@ import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.memoryposts.comment.controller.request.CreateCommentRequest;
 import com.example.dearfam.domain.memoryposts.comment.controller.response.GetAllCommentResponse;
 import com.example.dearfam.domain.memoryposts.comment.controller.response.GetCreatedCommentResponse;
-import com.example.dearfam.domain.memoryposts.comment.dto.MemoryPostCommentDto;
 import com.example.dearfam.domain.memoryposts.comment.service.MemoryPostCommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,9 +38,7 @@ public class MemoryPostCommentController {
         Long writerId = jwtService.getTokenDto().getUserId();
         String content = request.getContent();
 
-        MemoryPostCommentDto memoryPostCommentDto = memoryPostCommentService.createMemoryPostComment(writerId, postId, content);
-
-        GetCreatedCommentResponse response = GetCreatedCommentResponse.from(memoryPostCommentDto);
+        GetCreatedCommentResponse response = memoryPostCommentService.createMemoryPostComment(writerId, postId, content);
 
         return Response.data(response);
     }
@@ -77,9 +74,7 @@ public class MemoryPostCommentController {
     @GetMapping
     public Response<List<GetAllCommentResponse>> getAllCommentsFromMemoryPost(@PathVariable Long postId) {
 
-        List<MemoryPostCommentDto> memoryPostCommentDtoList = memoryPostCommentService.getCommentsFromMemoryPost(postId);
-
-        List<GetAllCommentResponse> response = GetAllCommentResponse.from(memoryPostCommentDtoList);
+        List<GetAllCommentResponse> response = memoryPostCommentService.getCommentsFromMemoryPost(postId);
 
         return Response.data(response);
     }
