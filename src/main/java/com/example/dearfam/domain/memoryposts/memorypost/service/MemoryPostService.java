@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.memoryposts.memorypost.service;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.common.entity.UploadDirectory;
 import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
@@ -76,9 +77,13 @@ public class MemoryPostService {
         List<MemoryPostImageDto> imageDtos = new ArrayList<>();
         // 이미지 S3에 저장 후 DB에 URL 과 순서 저장
         if (images != null && !images.isEmpty()) {
+        boolean hasValidImages = images != null &&
+                images.stream().anyMatch(file -> file != null && !file.isEmpty());
+        if (hasValidImages) {
             log.info("이미지 null 값 아님");
             for (int i = 0; i < images.size(); i++) {
                 String imageKey = s3Service.uploadPostImages(images.get(i), memoryPost.getId());
+                String imageKey = s3Service.upload(images.get(i), UploadDirectory.POSTS,memoryPost.getId());
                 String imageUrl = s3Service.generateUrlFromKey(imageKey);
                 MemoryPostImage image = MemoryPostImage.builder()
                         .imageKey(imageKey)
