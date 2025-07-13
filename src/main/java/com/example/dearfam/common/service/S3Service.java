@@ -1,5 +1,6 @@
 package com.example.dearfam.common.service;
 
+import com.example.dearfam.common.entity.UploadDirectory;
 import com.example.dearfam.common.exception.errorcode.S3ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +32,13 @@ public class S3Service {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
 
+    public String upload(MultipartFile file, UploadDirectory directory, Long id) {
         //1. 파일 유효성 검사하기
         validateImageFile(file);
 
         // 2. S3에 저장될 파일 경로 생성 (e.g., posts/1/uuid.jpg)
         String extension = getExtension(file);
+        String key = generateKey(directory, id, extension);
 
         // 3. S3 업로드 요청 객체 생성
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -46,6 +49,7 @@ public class S3Service {
                 .build();
         try {
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            log.info("파일 업로드 성공 - dir: {}, id: {}, key: {}", directory, id, key);
         } catch (IOException e) {
             log.error("파일을 읽어오는 중 오류가 발생했습니다.", e);
             throw S3ErrorCode.UPLOAD_FAILED.defaultException(e);
@@ -121,6 +125,8 @@ public class S3Service {
         return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
     }
 
+    private String generateKey(UploadDirectory directory, Long id, String extension) {
+        return directory.getBaseDir() + "/" + id + "/" + UUID.randomUUID() + "." + extension;
     }
 
 }
