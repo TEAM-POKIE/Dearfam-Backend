@@ -17,4 +17,8 @@ public class Response<T> {
     public static <T> Response<T> data(T data) {
         return new Response<>(0, "", data);
     }
+
+    public static <T> Response<T> data(String message, T data) {
+        return new Response<>(0, message, data);
+    }
 }
