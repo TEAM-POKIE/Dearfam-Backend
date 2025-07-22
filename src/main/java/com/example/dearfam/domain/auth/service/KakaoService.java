@@ -2,6 +2,7 @@ package com.example.dearfam.domain.auth.service;
 
 import com.example.dearfam.domain.auth.exception.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -15,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoService implements OAuth2ServiceInterface {
@@ -39,6 +41,7 @@ public class KakaoService implements OAuth2ServiceInterface {
     @Override
     public String getAccessToken(String code, String redirectUri) {
         // 인가코드와 redirectUri를 사용해서 카카오에 액세스 토큰을 요청함
+        log.info("카카오 액세스 토큰 요청 시작. redirectUri: {}", redirectUri);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -52,6 +55,7 @@ public class KakaoService implements OAuth2ServiceInterface {
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         try {
+            log.info("카카오 토큰 발급 요청. URI: {}", tokenUri);
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     tokenUri,
                     HttpMethod.POST,
@@ -62,13 +66,16 @@ public class KakaoService implements OAuth2ServiceInterface {
 
             Map<String, Object> body = response.getBody();
             if (body == null) {
+                log.error("카카오 액세스 토큰 응답 body가 null입니다.");
                 throw AuthErrorCode.KAKAO_ACCESS_TOKEN_IS_NULL.defaultException();
             }
 
             return body.get("access_token").toString();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("카카오 인증 코드(인가 코드)가 유효하지 않습니다. status: {}, response: {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
             throw AuthErrorCode.KAKAO_AUTH_CODE_INVALID.defaultException();
         } catch (RestClientException e) {
+            log.error("카카오 서버와 통신 중 오류가 발생했습니다.", e);
             throw AuthErrorCode.KAKAO_COMMUNICATION_ERROR.defaultException();
         }
 
