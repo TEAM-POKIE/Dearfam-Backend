@@ -100,11 +100,11 @@ public class KakaoService implements OAuth2ServiceInterface {
             throw AuthErrorCode.GET_USER_INFO_FAILED_FROM_SOCIAL_PROVIDER.defaultException();
         }
 
-        Object socialUserIdObj =  attributes.get("id");
+        Object socialUserIdObj = attributes.get("id");
         if (socialUserIdObj == null) {
             throw AuthErrorCode.CANNOT_FIND_KAKAO_USER_ID.defaultException();
         }
-        String socialUserId = (String) socialUserIdObj;
+        String socialUserId = String.valueOf(socialUserIdObj);
 
         return OAuth2Attributes.of(attributes, provider, socialUserId);
     }
