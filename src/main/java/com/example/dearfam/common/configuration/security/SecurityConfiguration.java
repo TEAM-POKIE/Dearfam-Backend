@@ -37,6 +37,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("https://dev.dearfam.store");
         configuration.addAllowedOrigin("http://localhost:8080");
+        configuration.addAllowedOrigin("https://dearfam-front-end.vercel.app/");
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
