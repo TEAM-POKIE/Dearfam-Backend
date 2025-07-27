@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Locale;
 
 @Configuration
 @EnableWebSecurity
@@ -35,10 +36,14 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("https://dev.dearfam.store");
-        configuration.addAllowedOrigin("http://localhost:8080");
+        configuration.setAllowedOriginPatterns(List.of(
+                "https://dearfam-front-end.vercel.app",
+                "https://dev.dearfam.store",
+                "http://localhost:8080",
+                "http://10.10.2.179:8080/"
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.addAllowedHeader("*");
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource resource = new UrlBasedCorsConfigurationSource();

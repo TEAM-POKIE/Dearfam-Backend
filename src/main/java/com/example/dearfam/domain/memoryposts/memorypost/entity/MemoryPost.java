@@ -55,12 +55,15 @@ public class MemoryPost extends BaseTimeEntity {
     @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemoryPostImage> memoryPostImages = new ArrayList<>();
 
+    // TODO: comment 편의 함수 생성해서 양방향 설정하기
     @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemoryPostComment> memoryPostComments = new ArrayList<>();
 
+    // TODO: Like 편의 함수 생성해서 양방향 설정하기
     @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemoryPostLike> memoryPostLikes = new ArrayList<>();
 
+    // TODO: 참여 가족 편의 함수 생성해서 양방향 설정하기
     @OneToMany(mappedBy = "memoryPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemoryPostFamilyMembers> memoryPostFamilyMembers = new ArrayList<>();
 
