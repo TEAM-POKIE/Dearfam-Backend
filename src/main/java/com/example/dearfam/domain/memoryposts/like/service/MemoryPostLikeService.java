@@ -43,9 +43,11 @@ public class MemoryPostLikeService {
 
         if (like.isLiked()) {
             like.setLiked(false);
+            memoryPostLikeRepository.save(like);
             return "좋아요를 취소했습니다.";
         } else {
             like.setLiked(true);
+            memoryPostLikeRepository.save(like);
             return "좋아요를 다시 눌렀습니다.";
         }
 
