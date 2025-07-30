@@ -28,6 +28,7 @@ public class MemoryPostCommentMapper {
     public GetAllCommentResponse toGetAllCommentResponse(MemoryPostComment comment) {
         Users writer = comment.getCommentWriter();
         return GetAllCommentResponse.builder()
+                .commentId(comment.getId())
                 .commentWriterId(writer.getId())
                 .commentWriterName(writer.getUserNickname())
                 .content(comment.getCommentContent())
