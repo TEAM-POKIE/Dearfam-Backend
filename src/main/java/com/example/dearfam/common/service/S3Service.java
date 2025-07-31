@@ -32,13 +32,13 @@ public class S3Service {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
 
-    public String upload(MultipartFile file, UploadDirectory directory, Long id) {
+    public String upload(MultipartFile file, UploadDirectory directory, Long id, String idLabel) {
         //1. 파일 유효성 검사하기
         validateImageFile(file);
 
         // 2. S3에 저장될 파일 경로 생성 (e.g., posts/1/uuid.jpg)
         String extension = getExtension(file);
-        String key = generateKey(directory, id, extension);
+        String key = generateKey(directory, id, idLabel, extension);
 
         // 3. S3 업로드 요청 객체 생성
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -125,8 +125,9 @@ public class S3Service {
         return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
     }
 
-    private String generateKey(UploadDirectory directory, Long id, String extension) {
-        return directory.getBaseDir() + "/" + id + "/" + UUID.randomUUID() + "." + extension;
+    private String generateKey(UploadDirectory directory, Long id, String idLabel, String extension) {
+        String prefix = idLabel + "-" + id;
+        return directory.getBaseDir() + "/" + prefix + "/" + UUID.randomUUID() + "." + extension;
     }
 
 }
