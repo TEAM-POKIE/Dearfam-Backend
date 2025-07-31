@@ -8,6 +8,7 @@ import com.example.dearfam.domain.diary.controller.response.GetSavedDiaryRespons
 import com.example.dearfam.domain.diary.service.DiaryBookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class DiaryBookController {
             }
     )
     @PostMapping("/generate")
-    public Response<GetDiaryResponse> generateDiary(@RequestBody DiaryGenerateRequest request) {
+    public Response<GetDiaryResponse> generateDiary(@Valid @RequestBody DiaryGenerateRequest request) {
 
         GetDiaryResponse response = diaryBookService.generateDiaryBook(request);
 
