@@ -83,7 +83,7 @@ public class MemoryPostService {
         if (hasValidImages) {
             log.info("이미지 null 값 아님");
             for (int i = 0; i < images.size(); i++) {
-                String imageKey = s3Service.upload(images.get(i), UploadDirectory.POSTS,memoryPost.getId());
+                String imageKey = s3Service.upload(images.get(i), UploadDirectory.POSTS, memoryPost.getId(), "post");
                 String imageUrl = s3Service.generateUrlFromKey(imageKey);
                 MemoryPostImage image = MemoryPostImage.builder()
                         .imageKey(imageKey)

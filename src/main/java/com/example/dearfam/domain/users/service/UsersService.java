@@ -76,7 +76,7 @@ public class UsersService {
 
         // 새 이미지 업로드
         log.info("이미지 업로드 요청");
-        String key = s3Service.upload(profileImage, UploadDirectory.PROFILES, userId);
+        String key = s3Service.upload(profileImage, UploadDirectory.PROFILES, userId, "user");
 
         // DB 업데이트
         user.setProfileImage(key); // S3 Key 저장
