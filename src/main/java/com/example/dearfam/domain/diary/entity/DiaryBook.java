@@ -24,7 +24,7 @@ public class DiaryBook extends BaseTimeEntity {
     @JoinColumn(name = "family_id", nullable = false)
     private Family family;
 
-    @Column(name = "diary_image_url", nullable = false)
+    @Column(name = "diary_image_key", nullable = false)
     private String diaryImage;
 
     @Builder
