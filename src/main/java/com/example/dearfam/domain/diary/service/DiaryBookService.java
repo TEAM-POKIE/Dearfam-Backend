@@ -8,7 +8,6 @@
     import com.example.dearfam.domain.diary.dto.DiaryContentDto;
     import com.example.dearfam.domain.diary.entity.DiaryBook;
     import com.example.dearfam.domain.diary.exception.DiaryErrorCode;
-    import com.example.dearfam.domain.diary.exception.DiaryException;
     import com.example.dearfam.domain.diary.repository.DiaryBookRepository;
     import com.example.dearfam.domain.family.entity.Family;
     import com.example.dearfam.domain.family.exception.FamilyErrorCode;
@@ -48,36 +47,52 @@
         public GetDiaryResponse generateDiaryBook(DiaryGenerateRequest request) {
             // postId 리스트 가져오기
             Long postId = request.getPostId();
+            log.info("[그림일기 생성] 요청 postId: {}", postId);
+
             if (postId == null) {
+                log.warn("[그림일기 생성] postId가 null입니다.");
                 throw DiaryErrorCode.POST_ID_REQUIRED.defaultException();
             }
             // postId로 MemoryPost 조회 (게시글이 없으면 예외 발생)
             MemoryPost post = memoryPostRepository.findById(postId)
-                    .orElseThrow(DiaryErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
+                    .orElseThrow(() -> {
+                        log.warn("[그림일기 생성] MemoryPost가 존재하지 않음 - postId: {}", postId);
+                        return DiaryErrorCode.MEMORY_POST_NOT_FOUND.defaultException();
+                    });
 
             // post 의 내용으로 그림일기 AI 호출
             String content = post.getMemoryPostContent();
+            log.info("[그림일기 생성] MemoryPost content 가져오기 완료 - content 길이: {}", content.length());
             DiaryContentDto aiGeneratedContent = callAiServer(content);
 
             LocalDate memoryDate = post.getMemoryDate();
             String weekday = memoryDate.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
 
+            log.info("[그림일기 생성] 완료 - 날짜: {}, 요일: {}", memoryDate, weekday);
             return GetDiaryResponse.from(memoryDate, weekday, aiGeneratedContent);
         }
 
         @Transactional
         public GetSavedDiaryResponse saveDiaryImage(Long userId, MultipartFile diaryImage) {
+            log.info("[그림일기 저장] 사용자 ID: {}", userId);
+
             if (diaryImage == null || diaryImage.isEmpty()) {
+                log.warn("[그림일기 저장] 이미지 파일이 비어 있음");
                 throw DiaryErrorCode.IMAGE_FILE_EMPTY.defaultException();
             }
 
             Users user = usersRepository.findById(userId)
-                    .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+                    .orElseThrow(() -> {
+                        log.warn("[그림일기 저장] 사용자 조회 실패 - userId: {}", userId);
+                        return UsersErrorCode.USER_NOT_FOUND.defaultException();
+                    });
             Family family = user.getFamily();
             if (family == null) {
+                log.warn("[그림일기 저장] 사용자에 대한 가족 정보가 없음 - userId: {}", userId);
                 throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
             }
 
+            log.info("[그림일기 저장] S3 업로드 시작 - familyId: {}", family.getId());
             String diaryImageKey = s3Service.upload(diaryImage, UploadDirectory.DIARY, family.getId(), "family");
 
             DiaryBook diaryBook = DiaryBook.builder()
@@ -85,30 +100,46 @@
                     .diaryImage(diaryImageKey)
                     .build();
             diaryBookRepository.save(diaryBook);
+            log.info("[그림일기 저장] DiaryBook 저장 완료 - diaryBookId: {}", diaryBook.getId());
 
-            return GetSavedDiaryResponse.from(diaryBook.getId(), s3Service.generateUrlFromKey(diaryImageKey));
+            String imageUrl = s3Service.generateUrlFromKey(diaryImageKey);
+            log.info("[그림일기 저장] 최종 URL 반환 - {}", imageUrl);
+            return GetSavedDiaryResponse.from(diaryBook.getId(), imageUrl);
 
         }
 
         @Transactional
         public void deleteDiary(Long userId, Long diaryBookId) {
+            log.info("[그림일기 삭제] 사용자 ID: {}, diaryBookId: {}", userId, diaryBookId);
             Users user = usersRepository.findById(userId)
-                    .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+                    .orElseThrow(() -> {
+                        log.warn("[그림일기 삭제] 사용자 조회 실패 - userId: {}", userId);
+                        return UsersErrorCode.USER_NOT_FOUND.defaultException();
+                    });
 
             DiaryBook diaryBook = diaryBookRepository.findById(diaryBookId)
-                    .orElseThrow(DiaryErrorCode.DIARY_BOOK_NOT_FOUND::defaultException);
+                    .orElseThrow(() -> {
+                        log.warn("[그림일기 삭제] 일기 조회 실패 - diaryBookId: {}", diaryBookId);
+                        return DiaryErrorCode.DIARY_BOOK_NOT_FOUND.defaultException();
+                    });
 
             // 사용자가 소속된 가족과 일기의 가족이 다르면 삭제 불가
             if (!user.getFamily().getId().equals(diaryBook.getFamily().getId())) {
+                log.warn("[그림일기 삭제] 권한 없음 - userFamilyId: {}, diaryFamilyId: {}",
+                        user.getFamily().getId(), diaryBook.getFamily().getId());
                 throw DiaryErrorCode.UNAUTHORIZED_DIARY_DELETE.defaultException();
             }
 
             s3Service.delete(diaryBook.getDiaryImage());
             diaryBookRepository.delete(diaryBook);
+            log.info("[그림일기 삭제] 삭제 완료");
+
         }
 
         // 그림일기 호출 메서드
         private DiaryContentDto callAiServer(String content) {
+            log.info("[AI 호출] 그림일기 생성 요청 전송 시작");
+
             Map<String, String> requestBody = new HashMap<>();
             requestBody.put("user_text", content);
 
@@ -124,14 +155,15 @@
                         DiaryContentDto.class
                 );
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    log.info("[AI 호출] 성공 - 응답 받음");
                     return response.getBody();
                 } else {
-                    log.error("AI 서버로부터 유효한 응답을 받지 못했습니다. status: {}", response.getStatusCode());
+                    log.error("[AI 호출] 실패 - 응답 코드: {}", response.getStatusCode());
                     throw DiaryErrorCode.AI_SERVER_FAILED.defaultException();
                 }
 
             } catch (RestClientException e) {
-                log.error("AI 서버와 통신 중 오류가 발생했습니다.", e);
+                log.error("[AI 호출] 통신 오류 발생", e);
                 throw DiaryErrorCode.AI_COMMUNICATION_ERROR.defaultException();
             }
         }
