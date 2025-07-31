@@ -11,10 +11,12 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder(access = PRIVATE)
 public class GetSavedDiaryResponse {
 
+    private Long diaryId;
     private String savedDiaryImageUrl;
 
-    public static GetSavedDiaryResponse from(String savedDiaryImageUrl) {
+    public static GetSavedDiaryResponse from(Long diaryId, String savedDiaryImageUrl) {
         return GetSavedDiaryResponse.builder()
+                .diaryId(diaryId)
                 .savedDiaryImageUrl(savedDiaryImageUrl)
                 .build();
     }

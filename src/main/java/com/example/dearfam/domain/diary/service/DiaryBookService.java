@@ -22,6 +22,7 @@
     import org.springframework.beans.factory.annotation.Value;
     import org.springframework.http.*;
     import org.springframework.stereotype.Service;
+    import org.springframework.transaction.annotation.Transactional;
     import org.springframework.web.client.RestClientException;
     import org.springframework.web.client.RestTemplate;
     import org.springframework.web.multipart.MultipartFile;
@@ -64,6 +65,7 @@
             return GetDiaryResponse.from(memoryDate, weekday, aiGeneratedContent);
         }
 
+        @Transactional
         public GetSavedDiaryResponse saveDiaryImage(Long userId, MultipartFile diaryImage) {
             if (diaryImage == null || diaryImage.isEmpty()) {
                 throw DiaryErrorCode.IMAGE_FILE_EMPTY.defaultException();
@@ -84,10 +86,9 @@
                     .build();
             diaryBookRepository.save(diaryBook);
 
-            return GetSavedDiaryResponse.from(s3Service.generateUrlFromKey(diaryImageKey));
+            return GetSavedDiaryResponse.from(diaryBook.getId(), s3Service.generateUrlFromKey(diaryImageKey));
 
         }
-
 
         // 그림일기 호출 메서드
         private DiaryContentDto callAiServer(String content) {
