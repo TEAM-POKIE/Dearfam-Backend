@@ -5,8 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.time.LocalDate;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -15,15 +14,18 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder(access = PRIVATE)
 public class GetDiaryResponse {
 
-    private final LocalDateTime memoryDate;
-    private final String weekday;
-    private final List<DiaryContentDto> contents;
+    private final LocalDate memoryDate;
 
-    public static GetDiaryResponse from(LocalDateTime memoryDate, String weekday, List<DiaryContentDto> contents) {
+    private final String weekday;
+
+    private final DiaryContentDto content;
+
+    public static GetDiaryResponse from(LocalDate memoryDate, String weekday, DiaryContentDto content) {
         return GetDiaryResponse.builder()
                 .memoryDate(memoryDate)
                 .weekday(weekday)
-                .contents(contents)
+                .content(content)
                 .build();
     }
+
 }
