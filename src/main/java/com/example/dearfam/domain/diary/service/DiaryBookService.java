@@ -1,12 +1,22 @@
     package com.example.dearfam.domain.diary.service;
 
+    import com.example.dearfam.common.entity.UploadDirectory;
+    import com.example.dearfam.common.service.S3Service;
     import com.example.dearfam.domain.diary.controller.request.DiaryGenerateRequest;
     import com.example.dearfam.domain.diary.controller.response.GetDiaryResponse;
+    import com.example.dearfam.domain.diary.controller.response.GetSavedDiaryResponse;
     import com.example.dearfam.domain.diary.dto.DiaryContentDto;
+    import com.example.dearfam.domain.diary.entity.DiaryBook;
     import com.example.dearfam.domain.diary.exception.DiaryErrorCode;
     import com.example.dearfam.domain.diary.exception.DiaryException;
+    import com.example.dearfam.domain.diary.repository.DiaryBookRepository;
+    import com.example.dearfam.domain.family.entity.Family;
+    import com.example.dearfam.domain.family.exception.FamilyErrorCode;
     import com.example.dearfam.domain.memoryposts.memorypost.entity.MemoryPost;
     import com.example.dearfam.domain.memoryposts.memorypost.repository.MemoryPostRepository;
+    import com.example.dearfam.domain.users.entity.Users;
+    import com.example.dearfam.domain.users.exception.UsersErrorCode;
+    import com.example.dearfam.domain.users.repository.UsersRepository;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +24,7 @@
     import org.springframework.stereotype.Service;
     import org.springframework.web.client.RestClientException;
     import org.springframework.web.client.RestTemplate;
+    import org.springframework.web.multipart.MultipartFile;
 
     import java.time.LocalDate;
     import java.time.format.TextStyle;
@@ -26,6 +37,9 @@
 
         private final RestTemplate restTemplate;
         private final MemoryPostRepository memoryPostRepository;
+        private final UsersRepository usersRepository;
+        private final S3Service s3Service;
+        private final DiaryBookRepository diaryBookRepository;
 
         @Value("${ai.server.url}")
         private String aiServerUrl;
@@ -36,13 +50,12 @@
             if (postId == null) {
                 throw DiaryErrorCode.POST_ID_REQUIRED.defaultException();
             }
-
-            // 2. postId로 MemoryPost 조회 (게시글이 없으면 예외 발생)
+            // postId로 MemoryPost 조회 (게시글이 없으면 예외 발생)
             MemoryPost post = memoryPostRepository.findById(postId)
                     .orElseThrow(DiaryErrorCode.MEMORY_POST_NOT_FOUND::defaultException);
 
+            // post 의 내용으로 그림일기 AI 호출
             String content = post.getMemoryPostContent();
-
             DiaryContentDto aiGeneratedContent = callAiServer(content);
 
             LocalDate memoryDate = post.getMemoryDate();
@@ -50,6 +63,31 @@
 
             return GetDiaryResponse.from(memoryDate, weekday, aiGeneratedContent);
         }
+
+        public GetSavedDiaryResponse saveDiaryImage(Long userId, MultipartFile diaryImage) {
+            if (diaryImage == null || diaryImage.isEmpty()) {
+                throw DiaryErrorCode.IMAGE_FILE_EMPTY.defaultException();
+            }
+
+            Users user = usersRepository.findById(userId)
+                    .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+            Family family = user.getFamily();
+            if (family == null) {
+                throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
+            }
+
+            String diaryImageKey = s3Service.upload(diaryImage, UploadDirectory.DIARY, family.getId(), "family");
+
+            DiaryBook diaryBook = DiaryBook.builder()
+                    .family(family)
+                    .diaryImage(diaryImageKey)
+                    .build();
+            diaryBookRepository.save(diaryBook);
+
+            return GetSavedDiaryResponse.from(s3Service.generateUrlFromKey(diaryImageKey));
+
+        }
+
 
         // 그림일기 호출 메서드
         private DiaryContentDto callAiServer(String content) {
@@ -79,4 +117,6 @@
                 throw DiaryErrorCode.AI_COMMUNICATION_ERROR.defaultException();
             }
         }
+
+
     }

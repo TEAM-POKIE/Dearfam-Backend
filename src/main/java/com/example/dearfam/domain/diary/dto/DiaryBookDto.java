@@ -13,15 +13,15 @@ import java.time.LocalDateTime;
 @Builder
 public class DiaryBookDto {
     private Long id;
-    private String diaryTitle;
-    private DiaryCoverColor diaryCoverColor;
+    private Long familyId;
+    private String diaryImage;
     private LocalDateTime createdAt;
 
     public static DiaryBookDto from(DiaryBook diaryBook) {
         return DiaryBookDto.builder()
                 .id(diaryBook.getId())
-                .diaryTitle(diaryBook.getDiaryTitle())
-                .diaryCoverColor(diaryBook.getDiaryCoverColor())
+                .familyId(diaryBook.getFamily().getId())
+                .diaryImage(diaryBook.getDiaryImage())
                 .createdAt(diaryBook.getCreatedAt())
                 .build();
     }

@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.diary.entity;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.domain.family.entity.Family;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,16 +20,17 @@ public class DiaryBook extends BaseTimeEntity {
     @Column(name = "diary_book_id", nullable = false)
     private Long id;
 
-    @Column(name = "diary_title", nullable = false, length = 20)
-    private String diaryTitle;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id", nullable = false)
+    private Family family;
 
-    @Column(name = "diary_cover_color", nullable = false)
-    private DiaryCoverColor diaryCoverColor;
+    @Column(name = "diary_image_url", nullable = false)
+    private String diaryImage;
 
     @Builder
-    public DiaryBook(String diaryTitle, DiaryCoverColor diaryCoverColor) {
-        this.diaryTitle = diaryTitle;
-        this.diaryCoverColor = diaryCoverColor;
+    public DiaryBook(Family family, String diaryImage) {
+        this.family = family;
+        this.diaryImage = diaryImage;
     }
 
 }
