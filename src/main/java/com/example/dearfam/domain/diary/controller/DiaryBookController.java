@@ -56,6 +56,24 @@ public class DiaryBookController {
 
         return Response.data("그림일기를 S3와 Db에 저장했습니다.", response);
     }
+
+    @Operation(
+            summary = "그림일기 삭제",
+            description = "그림일기를 S3, DB에서 모두 정보를 삭제합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "DIARY_BOOK_NOT_FOUND"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @DeleteMapping("/{diaryBookId}")
+    public Response<String> deleteDiary(@PathVariable Long diaryBookId) {
+        Long userId = jwtService.getTokenDto().getUserId();
+        diaryBookService.deleteDiary(userId, diaryBookId);
+
+        return Response.data("그림일기를 삭제했습니다.");
+    }
+
 }
 
 

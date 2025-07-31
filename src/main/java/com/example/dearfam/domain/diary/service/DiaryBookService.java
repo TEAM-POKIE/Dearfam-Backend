@@ -90,6 +90,23 @@
 
         }
 
+        @Transactional
+        public void deleteDiary(Long userId, Long diaryBookId) {
+            Users user = usersRepository.findById(userId)
+                    .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+            DiaryBook diaryBook = diaryBookRepository.findById(diaryBookId)
+                    .orElseThrow(DiaryErrorCode.DIARY_BOOK_NOT_FOUND::defaultException);
+
+            // 사용자가 소속된 가족과 일기의 가족이 다르면 삭제 불가
+            if (!user.getFamily().getId().equals(diaryBook.getFamily().getId())) {
+                throw DiaryErrorCode.UNAUTHORIZED_DIARY_DELETE.defaultException();
+            }
+
+            s3Service.delete(diaryBook.getDiaryImage());
+            diaryBookRepository.delete(diaryBook);
+        }
+
         // 그림일기 호출 메서드
         private DiaryContentDto callAiServer(String content) {
             Map<String, String> requestBody = new HashMap<>();
