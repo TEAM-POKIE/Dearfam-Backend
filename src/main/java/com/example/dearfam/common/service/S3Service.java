@@ -65,7 +65,7 @@ public class S3Service {
     public String moveTempFileToPermanentLocation(String tempUrl, UploadDirectory directory, Long id, String idLabel) {
         // 1. 임시 URL에서 원본 Key 추출
         String sourceKey = extractKeyFromUrl(tempUrl)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 S3 URL입니다: " + tempUrl));
+                .orElseThrow(() -> S3ErrorCode.INVALID_S3_URL.defaultException("잘못된 S3 URL: " + tempUrl));
 
         // 2. 원본 Key에서 확장자 추출 후, 영구 저장될 새로운 Key 생성
         String extension = sourceKey.substring(sourceKey.lastIndexOf(".") + 1);
@@ -90,7 +90,7 @@ public class S3Service {
         } catch (SdkException e) {
             log.error("S3 객체 이동(복사 후 삭제) 실패. Source: {}", sourceKey, e);
             // S3ErrorCode에 OBJECT_MOVE_FAILED 와 같은 에러 코드를 추가하여 사용하는 것을 권장합니다.
-            throw S3ErrorCode.UPLOAD_FAILED.defaultException(e);
+            throw S3ErrorCode.OBJECT_COPY_FAILED.defaultException(e);
         }
 
         return destinationKey;
