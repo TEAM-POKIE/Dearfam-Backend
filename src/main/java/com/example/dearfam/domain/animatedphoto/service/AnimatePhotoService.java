@@ -1,8 +1,13 @@
 package com.example.dearfam.domain.animatedphoto.service;
 
+import com.example.dearfam.common.entity.UploadDirectory;
+import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
+import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.dto.AiAnimatePhotoDto;
+import com.example.dearfam.domain.animatedphoto.entity.AnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.exception.AnimatePhotoErrorCode;
 import com.example.dearfam.domain.animatedphoto.repository.AnimatePhotoRepository;
 import com.example.dearfam.domain.family.entity.Family;
@@ -19,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
@@ -35,6 +41,8 @@ public class AnimatePhotoService {
 
     private final RestTemplate restTemplate;
     private final AnimatePhotoRepository animatePhotoRepository;
+    private final UsersRepository usersRepository;
+    private final S3Service s3Service;
 
     @Value("${ai.server.url}")
     private String aiServerUrl;
@@ -47,6 +55,39 @@ public class AnimatePhotoService {
         log.info("사진 영상화 완료. 영상 주소: {}", videoUrl);
 
         return GetAnimatePhotoResponse.from(videoUrl);
+    }
+
+    @Transactional
+    public GetSavedAnimatePhoto saveAnimatePhoto(Long userId, AnimatePhotoSaveRequest request) {
+        // 1. 사용자 및 가족 정보 조회
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+        Family family = user.getFamily();
+        if (family == null) {
+            throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
+        }
+
+        String tempVideoUrl = request.getTempVideoUrl();
+        log.info("영상 저장 요청 수신. userId: {}, familyId: {}, url: {}", userId, family.getId(), tempVideoUrl);
+
+        // 2. S3Service를 통해 임시 파일을 영구 경로로 이동시키고, 최종 Key를 받음
+        String permanentVideoKey = s3Service.moveTempFileToPermanentLocation(
+                tempVideoUrl,
+                UploadDirectory.VIDEO,
+                family.getId(),
+                "family"
+        );
+
+        // 3. AnimatePhoto 엔티티를 생성하고 DB에 저장
+        AnimatePhoto animatePhoto = AnimatePhoto.builder()
+                .family(family)
+                .animatePhoto(permanentVideoKey)
+                .build();
+        animatePhotoRepository.save(animatePhoto);
+        log.info("영상 정보 DB 저장 완료. animatePhotoId: {}, key: {}", animatePhoto.getId(), permanentVideoKey);
+
+        String permanentUrl = s3Service.generateUrlFromKey(permanentVideoKey);
+        return GetSavedAnimatePhoto.from(animatePhoto.getId(), permanentUrl);
     }
 
     private String callAiServer(MultipartFile image, String actionPrompt) {

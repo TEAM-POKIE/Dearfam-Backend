@@ -3,7 +3,9 @@ package com.example.dearfam.domain.animatedphoto.controller;
 import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
+import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.service.AnimatePhotoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,10 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
@@ -24,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AnimatePhotoController {
 
     private final AnimatePhotoService animatePhotoService;
-
+    private final JwtService jwtService;
     private final ObjectMapper objectMapper; // ← 꼭 주입받아야 함 (@Bean 등록돼 있어야)
 
 
@@ -39,9 +38,9 @@ public class AnimatePhotoController {
                     @ApiResponse(responseCode = "500", description = "AI 서버 응답이 null이거나 기타 예외 발생")
             }
     )
-    @PostMapping( value = "/generate", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Response<GetAnimatePhotoResponse> generateAnimatedPhoto(
-            @RequestPart("request") String requestJson,
+    @PostMapping(value = "/generate", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public Response<GetAnimatePhotoResponse> generateAnimatePhoto(
+            @Valid @RequestPart("request") String requestJson,
             @RequestPart("image") MultipartFile image
     ) {
         // TODO : RequestPart 에 AnimatePhotoGenerateRequest 를 다시 RequestPart 에 적용 하기~
@@ -54,7 +53,25 @@ public class AnimatePhotoController {
 
         GetAnimatePhotoResponse response = animatePhotoService.generateAnimatedPhoto(request, image);
 
-        return Response.data("영상화 완료. 사용자 저장 시 이 영상 주소를 RequestBody 에 넣어주세요.",response);
+        return Response.data("영상화 완료. 사용자 저장 시 이 영상 주소를 RequestBody 에 넣어주세요.", response);
     }
 
+    @Operation(
+            summary = "사진 영상화된 비디오 저장",
+            description = "사용자가 저장하기를 눌렀을 때 사진 영상화된 비디오를 DB, S3에 저장합니다",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "400", description = "유효하지 않은 S3 URL"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @PostMapping("/save")
+    public Response<GetSavedAnimatePhoto> saveAnimatePhoto(@Valid @RequestBody AnimatePhotoSaveRequest request) {
+
+        Long userId = jwtService.getTokenDto().getUserId();
+
+        GetSavedAnimatePhoto response = animatePhotoService.saveAnimatePhoto(userId, request);
+
+        return Response.data("영상을 정상적으로 저장하였습니다.", response);
+    }
 }

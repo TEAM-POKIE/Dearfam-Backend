@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum UploadDirectory {
     POSTS("posts"),
     PROFILES("profiles"),
-    DIARY("diary");
+    DIARY("diary"),
+    VIDEO("video");
 
     private final String baseDir;
 
