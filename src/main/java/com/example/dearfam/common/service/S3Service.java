@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -59,6 +60,40 @@ public class S3Service {
         }
 
         return key;
+    }
+
+    public String moveTempFileToPermanentLocation(String tempUrl, UploadDirectory directory, Long id, String idLabel) {
+        // 1. 임시 URL에서 원본 Key 추출
+        String sourceKey = extractKeyFromUrl(tempUrl)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 S3 URL입니다: " + tempUrl));
+
+        // 2. 원본 Key에서 확장자 추출 후, 영구 저장될 새로운 Key 생성
+        String extension = sourceKey.substring(sourceKey.lastIndexOf(".") + 1);
+        String destinationKey = generateKey(directory, id, idLabel, extension);
+
+        log.info("S3 객체 이동 시작. Source: {} -> Destination: {}", sourceKey, destinationKey);
+        try {
+            // 3. 객체 복사
+            CopyObjectRequest copyReq = CopyObjectRequest.builder()
+                    .sourceBucket(bucket)
+                    .sourceKey(sourceKey)
+                    .destinationBucket(bucket)
+                    .destinationKey(destinationKey)
+                    .build();
+            s3Client.copyObject(copyReq);
+            log.info("S3 객체 복사 성공.");
+
+            // 4. 원본 객체 삭제
+            delete(sourceKey);
+            log.info("원본 임시 S3 객체 삭제 성공.");
+
+        } catch (SdkException e) {
+            log.error("S3 객체 이동(복사 후 삭제) 실패. Source: {}", sourceKey, e);
+            // S3ErrorCode에 OBJECT_MOVE_FAILED 와 같은 에러 코드를 추가하여 사용하는 것을 권장합니다.
+            throw S3ErrorCode.UPLOAD_FAILED.defaultException(e);
+        }
+
+        return destinationKey;
     }
 
     public void delete(String key) {
