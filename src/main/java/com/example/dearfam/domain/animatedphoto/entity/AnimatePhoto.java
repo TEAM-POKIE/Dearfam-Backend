@@ -1,4 +1,4 @@
-package com.example.dearfam.domain.diary.entity;
+package com.example.dearfam.domain.animatedphoto.entity;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
 import com.example.dearfam.domain.family.entity.Family;
@@ -12,25 +12,25 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "diary_book")
-public class DiaryBook extends BaseTimeEntity {
+@Table(name = "animate_photo")
+public class AnimatePhoto extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "diary_book_id", nullable = false)
+    @Column(name = "animated_photo_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "family_id", nullable = false)
     private Family family;
 
-    @Column(name = "diary_image_key", nullable = false)
-    private String diaryImage;
+    @Column(name = "animate_photo_key")
+    private String animatePhoto;
 
     @Builder
-    public DiaryBook(Family family, String diaryImage) {
+    public AnimatePhoto(Family family, String animatePhoto) {
         this.family = family;
-        this.diaryImage = diaryImage;
+        this.animatePhoto = animatePhoto;
     }
 
 }
