@@ -10,6 +10,7 @@ import com.example.dearfam.domain.animatedphoto.dto.AiAnimatePhotoDto;
 import com.example.dearfam.domain.animatedphoto.entity.AnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.exception.AnimatePhotoErrorCode;
 import com.example.dearfam.domain.animatedphoto.repository.AnimatePhotoRepository;
+import com.example.dearfam.domain.diary.exception.DiaryErrorCode;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.users.entity.Users;
@@ -88,6 +89,31 @@ public class AnimatePhotoService {
 
         String permanentUrl = s3Service.generateUrlFromKey(permanentVideoKey);
         return GetSavedAnimatePhoto.from(animatePhoto.getId(), permanentUrl);
+    }
+
+    @Transactional
+    public void deleteAnimatePhoto(Long userId, Long animatePhotoId) {
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(UsersErrorCode.USER_NOT_FOUND::defaultException);
+
+        AnimatePhoto animatePhoto = animatePhotoRepository.findById(animatePhotoId)
+                .orElseThrow(() -> {
+                    log.warn("[영상화 삭제] 영상 조회 실패 - animatePhotoId: {}", animatePhotoId);
+                    return AnimatePhotoErrorCode.VIDEO_NOT_FOUND.defaultException();
+                });
+
+        // 사용자가 소속된 가족과 일기의 가족이 다르면 삭제 불가
+        if (!user.getFamily().getId().equals(animatePhoto.getFamily().getId())) {
+            log.warn("[영상화 삭제] 권한 없음 - userFamilyId: {}, animatePhotoId: {}",
+                    user.getFamily().getId(), animatePhoto.getFamily().getId());
+            throw AnimatePhotoErrorCode.UNAUTHORIZED_VIDEO_DELETE.defaultException();
+        }
+
+        s3Service.delete(animatePhoto.getAnimatePhoto());
+        log.info("[영상화 삭제] S3 삭제 완료");
+        animatePhotoRepository.delete(animatePhoto);
+        log.info("[영상화 삭제] DB 삭제 완료");
+
     }
 
     private String callAiServer(MultipartFile image, String actionPrompt) {

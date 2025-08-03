@@ -74,4 +74,22 @@ public class AnimatePhotoController {
 
         return Response.data("영상을 정상적으로 저장하였습니다.", response);
     }
+
+    @Operation(
+            summary = "사진 영상화 비디오 삭제",
+            description = "사진 영상화된 비디오의 데이터를 삭제합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "403", description = "같은 가족만 삭제 가능"),
+                    @ApiResponse(responseCode = "404", description = "해당 영상을 찾을 수 없습니다."),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @DeleteMapping("/delete/{animatePhotoId}")
+    public Response<String> deleteAnimatePhoto(@PathVariable Long animatePhotoId) {
+        Long userId = jwtService.getTokenDto().getUserId();
+        animatePhotoService.deleteAnimatePhoto(userId, animatePhotoId);
+
+        return Response.data("영상을 정상적으로 삭제하였습니다.");
+    }
 }

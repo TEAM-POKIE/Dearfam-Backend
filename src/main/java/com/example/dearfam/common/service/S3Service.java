@@ -65,7 +65,7 @@ public class S3Service {
     public String moveTempFileToPermanentLocation(String tempUrl, UploadDirectory directory, Long id, String idLabel) {
         // 1. 임시 URL에서 원본 Key 추출
         String sourceKey = extractKeyFromUrl(tempUrl)
-                .orElseThrow(() -> S3ErrorCode.INVALID_S3_URL.defaultException("잘못된 S3 URL: " + tempUrl));
+                .orElseThrow(S3ErrorCode.INVALID_S3_URL::defaultException);
 
         // 2. 원본 Key에서 확장자 추출 후, 영구 저장될 새로운 Key 생성
         String extension = sourceKey.substring(sourceKey.lastIndexOf(".") + 1);
