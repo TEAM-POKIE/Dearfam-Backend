@@ -101,6 +101,8 @@ public class DiaryBookController {
             description = "그림일기를 하나씩 볼 때 그림일기 ID를 통해 조회합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "401", description = "UNAUTHORIZED_DIARY_ACCESS"),
+                    @ApiResponse(responseCode = "404", description = "USER_NOT_FOUND, DIARY_NOT_FOUND"),
                     @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
             }
     )
