@@ -3,7 +3,7 @@ package com.example.dearfam.domain.diary.controller;
 import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.diary.controller.request.DiaryGenerateRequest;
-import com.example.dearfam.domain.diary.controller.response.GetAllDiariesResponse;
+import com.example.dearfam.domain.diary.controller.response.GetDiaryUrlResponse;
 import com.example.dearfam.domain.diary.controller.response.GetDiaryResponse;
 import com.example.dearfam.domain.diary.controller.response.GetSavedDiaryResponse;
 import com.example.dearfam.domain.diary.service.DiaryBookService;
@@ -89,12 +89,29 @@ public class DiaryBookController {
             }
     )
     @GetMapping("/all")
-    public Response<List<GetAllDiariesResponse>> getAllDiary() {
+    public Response<List<GetDiaryUrlResponse>> getAllDiary() {
         Long userId = jwtService.getTokenDto().getUserId();
-        List<GetAllDiariesResponse> responseList = diaryBookService.getAllDiaries(userId);
+        List<GetDiaryUrlResponse> responseList = diaryBookService.getAllDiaries(userId);
 
         return Response.data(responseList);
     }
+
+    @Operation(
+            summary = "그림일기 ID로 조회",
+            description = "그림일기를 하나씩 볼 때 그림일기 ID를 통해 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/{diaryBookId}")
+    public Response<GetDiaryUrlResponse> getDiaryById(@PathVariable Long diaryBookId) {
+        Long userId = jwtService.getTokenDto().getUserId();
+        GetDiaryUrlResponse response = diaryBookService.getDiary(userId, diaryBookId);
+
+        return Response.data(response);
+    }
+
 }
 
 
