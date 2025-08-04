@@ -4,13 +4,12 @@ import com.example.dearfam.common.entity.UploadDirectory;
 import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
-import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoTempUrlResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.dto.AiAnimatePhotoDto;
 import com.example.dearfam.domain.animatedphoto.entity.AnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.exception.AnimatePhotoErrorCode;
 import com.example.dearfam.domain.animatedphoto.repository.AnimatePhotoRepository;
-import com.example.dearfam.domain.diary.exception.DiaryErrorCode;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.users.entity.Users;
@@ -48,14 +47,14 @@ public class AnimatePhotoService {
     @Value("${ai.server.url}")
     private String aiServerUrl;
 
-    public GetAnimatePhotoResponse generateAnimatedPhoto (AnimatePhotoGenerateRequest request, MultipartFile image) {
+    public GetAnimatePhotoTempUrlResponse generateAnimatedPhoto (AnimatePhotoGenerateRequest request, MultipartFile image) {
         String actionPrompt = request.getActionPrompt();
         log.info("AI 서버에 사진 영상화를 요청합니다. prompt: {}", actionPrompt);
 
         String videoUrl = callAiServer(image, actionPrompt);
         log.info("사진 영상화 완료. 영상 주소: {}", videoUrl);
 
-        return GetAnimatePhotoResponse.from(videoUrl);
+        return GetAnimatePhotoTempUrlResponse.from(videoUrl);
     }
 
     @Transactional

@@ -4,7 +4,7 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
-import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoTempUrlResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.service.AnimatePhotoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +28,7 @@ public class AnimatePhotoController {
 
     @Operation(
             summary = "사진 영상화",
-            description = "사진을 프롬프팅과 함께 AI를 호출헤 영상화합니다.",
+            description = "사진을 프롬프팅과 함께 AI를 호출헤 영상화한 후, 미리보기를 위한 임시 주소를 생성합니다.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "영상화 성공"),
                     @ApiResponse(responseCode = "400", description = "요청 JSON 파싱 실패 또는 이미지 처리 오류"),
@@ -39,7 +38,7 @@ public class AnimatePhotoController {
             }
     )
     @PostMapping(value = "/generate", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Response<GetAnimatePhotoResponse> generateAnimatePhoto(
+    public Response<GetAnimatePhotoTempUrlResponse> generateAnimatePhoto(
             @Valid @RequestPart("request") String requestJson,
             @RequestPart("image") MultipartFile image
     ) {
@@ -51,7 +50,7 @@ public class AnimatePhotoController {
             throw new IllegalArgumentException("요청 JSON 파싱 실패");
         }
 
-        GetAnimatePhotoResponse response = animatePhotoService.generateAnimatedPhoto(request, image);
+        GetAnimatePhotoTempUrlResponse response = animatePhotoService.generateAnimatedPhoto(request, image);
 
         return Response.data("영상화 완료. 사용자 저장 시 이 영상 주소를 RequestBody 에 넣어주세요.", response);
     }
