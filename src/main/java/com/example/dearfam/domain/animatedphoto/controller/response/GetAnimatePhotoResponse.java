@@ -10,13 +10,13 @@ import static lombok.AccessLevel.PRIVATE;
 @AllArgsConstructor
 @Builder(access = PRIVATE)
 public class GetAnimatePhotoResponse {
-
+    private final Long animatePhotoId;
     private final String animatePhotoUrl;
 
-    public static GetAnimatePhotoResponse from(String animatePhotoUrl) {
+    public static GetAnimatePhotoResponse from(Long animatePhotoId, String animatePhotoUrl) {
         return GetAnimatePhotoResponse.builder()
+                .animatePhotoId(animatePhotoId)
                 .animatePhotoUrl(animatePhotoUrl)
                 .build();
     }
-
 }

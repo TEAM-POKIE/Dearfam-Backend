@@ -4,6 +4,7 @@ import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoTempUrlResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.service.AnimatePhotoService;
@@ -91,4 +92,25 @@ public class AnimatePhotoController {
 
         return Response.data("영상을 정상적으로 삭제하였습니다.");
     }
+
+    @Operation(
+            summary = "영상화한 비디오 단일 조회",
+            description = "영상화한 사진의 비디오의 ID로 단일 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "403", description = "같은 가족만 접근 가능"),
+                    @ApiResponse(responseCode = "404", description = "해당 영상을 찾을 수 없습니다."),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/{animatePhotoId}")
+    public Response<GetAnimatePhotoResponse> getAnimatePhoto(@PathVariable Long animatePhotoId) {
+        Long userId = jwtService.getTokenDto().getUserId();
+        GetAnimatePhotoResponse response = animatePhotoService.getAnimatePhoto(userId, animatePhotoId);
+
+        return Response.data(response);
+    }
+
+    // TODO : 영상화한 비디오의 전체 조회는 영상의 썸네일 이미지만 보내는 형식으로 추후에 API 추가
+
 }

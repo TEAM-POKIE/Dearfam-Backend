@@ -4,6 +4,7 @@ import com.example.dearfam.common.entity.UploadDirectory;
 import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoTempUrlResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.dto.AiAnimatePhotoDto;
@@ -113,6 +114,32 @@ public class AnimatePhotoService {
         animatePhotoRepository.delete(animatePhoto);
         log.info("[영상화 삭제] DB 삭제 완료");
 
+    }
+
+    @Transactional(readOnly = true)
+    public GetAnimatePhotoResponse getAnimatePhoto(Long userId, Long animatePhotoId) {
+        log.info("[영상화 단건 조회] 사용자 ID: {}, animatePhotoId: {}", userId, animatePhotoId);
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("[영상화 단건 조회] 사용자 조회 실패 - userId: {}", userId);
+                    return UsersErrorCode.USER_NOT_FOUND.defaultException();
+                });
+
+        AnimatePhoto animatePhoto = animatePhotoRepository.findById(animatePhotoId)
+                .orElseThrow(() -> {
+                    log.error("[영상화 단건 조회] 영상 조회 실패 - animatePhotoId: {}", animatePhotoId);
+                    return AnimatePhotoErrorCode.VIDEO_NOT_FOUND.defaultException();
+                });
+
+        if (!user.getFamily().getId().equals(animatePhoto.getFamily().getId())) {
+            log.warn("[영상화 단건 조회] 권한 없음 - userFamilyId: {}, animatePhotoFamilyId: {}",
+                    user.getFamily().getId(), animatePhoto.getFamily().getId());
+            throw AnimatePhotoErrorCode.UNAUTHORIZED_VIDEO_DELETE.defaultException();
+        }
+
+        String videoUrl = s3Service.generateUrlFromKey(animatePhoto.getAnimatePhoto());
+        log.info("[영상화 단건 조회] 조회 성공 - animatePhotoId: {}", animatePhotoId);
+        return GetAnimatePhotoResponse.from(animatePhoto.getId(), videoUrl);
     }
 
     private String callAiServer(MultipartFile image, String actionPrompt) {
