@@ -3,6 +3,7 @@ package com.example.dearfam.domain.diary.controller;
 import com.example.dearfam.common.dto.response.Response;
 import com.example.dearfam.common.jwt.auth.JwtService;
 import com.example.dearfam.domain.diary.controller.request.DiaryGenerateRequest;
+import com.example.dearfam.domain.diary.controller.response.GetAllDiariesResponse;
 import com.example.dearfam.domain.diary.controller.response.GetDiaryResponse;
 import com.example.dearfam.domain.diary.controller.response.GetSavedDiaryResponse;
 import com.example.dearfam.domain.diary.service.DiaryBookService;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -75,6 +78,23 @@ public class DiaryBookController {
         return Response.data("그림일기를 삭제했습니다.");
     }
 
+    @Operation(
+            summary = "그림일기 전체 조회",
+            description = "책장에서 보여질 가족의 그림일기들을 모두 조회합니다",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "404", description = "USER_NOT_FOUND"),
+                    @ApiResponse(responseCode = "404", description = "FAMILY_NOT_FOUND"),
+                    @ApiResponse(responseCode = "500", description = "INTERNAL_SERVER_ERROR")
+            }
+    )
+    @GetMapping("/all")
+    public Response<List<GetAllDiariesResponse>> getAllDiary() {
+        Long userId = jwtService.getTokenDto().getUserId();
+        List<GetAllDiariesResponse> responseList = diaryBookService.getAllDiaries(userId);
+
+        return Response.data(responseList);
+    }
 }
 
 
