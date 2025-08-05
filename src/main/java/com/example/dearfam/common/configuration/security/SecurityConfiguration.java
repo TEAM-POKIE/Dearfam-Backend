@@ -39,6 +39,7 @@ public class SecurityConfiguration {
         configuration.setAllowedOriginPatterns(List.of(
                 "https://dearfam-front-end.vercel.app",
                 "https://api.dearfam.store",
+                "https://www.dearfam.org",
                 "http://localhost:8080",
                 "http://10.10.2.179:8080/"
         ));
