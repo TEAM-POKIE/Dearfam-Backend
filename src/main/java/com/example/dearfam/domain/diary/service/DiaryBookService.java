@@ -3,6 +3,7 @@
     import com.example.dearfam.common.entity.UploadDirectory;
     import com.example.dearfam.common.service.S3Service;
     import com.example.dearfam.domain.diary.controller.request.DiaryGenerateRequest;
+    import com.example.dearfam.domain.diary.controller.response.GetDiaryUrlResponse;
     import com.example.dearfam.domain.diary.controller.response.GetDiaryResponse;
     import com.example.dearfam.domain.diary.controller.response.GetSavedDiaryResponse;
     import com.example.dearfam.domain.diary.dto.DiaryContentDto;
@@ -134,6 +135,60 @@
             diaryBookRepository.delete(diaryBook);
             log.info("[그림일기 삭제] 삭제 완료");
 
+        }
+
+        @Transactional(readOnly = true)
+        public List<GetDiaryUrlResponse> getAllDiaries(Long userId) {
+            log.info("[그림일기 전체 조회] 사용자 ID: {}", userId);
+
+            Users user = usersRepository.findById(userId)
+                    .orElseThrow(() -> {
+                        log.error("[그림일기 전체 조회] 사용자 조회 실패 - userId: {}", userId);
+                        return UsersErrorCode.USER_NOT_FOUND.defaultException();
+                    });
+
+            Family family = user.getFamily();
+            if (family == null) {
+                log.error("[그림일기 전체 조회] 사용자에 대한 가족 정보가 없음 - userId: {}", userId);
+                throw FamilyErrorCode.FAMILY_NOT_FOUND.defaultException();
+            }
+
+            List<DiaryBook> diaryBookList = diaryBookRepository.findAllByFamilyOrderByCreatedAtDesc(family);
+            log.info("[그림일기 전체 조회] 가족 ID {}에 대한 {}개의 그림일기 조회", family.getId(), diaryBookList.size());
+            List<GetDiaryUrlResponse> responseList = new ArrayList<>();
+            for (DiaryBook diaryBook : diaryBookList) {
+                String imageUrl = s3Service.generateUrlFromKey(diaryBook.getDiaryImage());
+                GetDiaryUrlResponse response = GetDiaryUrlResponse.from(diaryBook.getId(), imageUrl);
+                responseList.add(response);
+            }
+            return responseList;
+        }
+
+        @Transactional(readOnly = true)
+        public GetDiaryUrlResponse getDiary(Long userId, Long diaryBookId) {
+            log.info("[그림일기 단일 조회] 사용자 ID: {}, diaryId: {}", userId, diaryBookId);
+
+            Users user = usersRepository.findById(userId)
+                    .orElseThrow(() -> {
+                        log.warn("[그림일기 단일 조회] 사용자 조회 실패 - userId: {}", userId);
+                        return UsersErrorCode.USER_NOT_FOUND.defaultException();
+                    });
+            DiaryBook diaryBook = diaryBookRepository.findById(diaryBookId)
+                    .orElseThrow(() -> {
+                        log.warn("[그림일기 단건 조회] 일기 조회 실패 - diaryBookId: {}", diaryBookId);
+                        return DiaryErrorCode.DIARY_BOOK_NOT_FOUND.defaultException();
+                    });
+
+            // 사용자가 소속된 가족과 일기의 가족이 다르면 삭제 불가
+            if (!user.getFamily().getId().equals(diaryBook.getFamily().getId())) {
+                log.warn("[그림일기 단건 조회] 권한 없음 - userFamilyId: {}, diaryFamilyId: {}",
+                        user.getFamily().getId(), diaryBook.getFamily().getId());
+                throw DiaryErrorCode.UNAUTHORIZED_DIARY_ACCESS.defaultException();
+            }
+
+            String imageUrl = s3Service.generateUrlFromKey(diaryBook.getDiaryImage());
+            log.info("[그림일기 단건 조회] 완료 - imageUrl: {}", imageUrl);
+            return GetDiaryUrlResponse.from(diaryBook.getId(), imageUrl);
         }
 
         // 그림일기 호출 메서드

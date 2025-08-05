@@ -5,12 +5,12 @@ import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoResponse;
+import com.example.dearfam.domain.animatedphoto.controller.response.GetAnimatePhotoTempUrlResponse;
 import com.example.dearfam.domain.animatedphoto.controller.response.GetSavedAnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.dto.AiAnimatePhotoDto;
 import com.example.dearfam.domain.animatedphoto.entity.AnimatePhoto;
 import com.example.dearfam.domain.animatedphoto.exception.AnimatePhotoErrorCode;
 import com.example.dearfam.domain.animatedphoto.repository.AnimatePhotoRepository;
-import com.example.dearfam.domain.diary.exception.DiaryErrorCode;
 import com.example.dearfam.domain.family.entity.Family;
 import com.example.dearfam.domain.family.exception.FamilyErrorCode;
 import com.example.dearfam.domain.users.entity.Users;
@@ -48,14 +48,14 @@ public class AnimatePhotoService {
     @Value("${ai.server.url}")
     private String aiServerUrl;
 
-    public GetAnimatePhotoResponse generateAnimatedPhoto (AnimatePhotoGenerateRequest request, MultipartFile image) {
+    public GetAnimatePhotoTempUrlResponse generateAnimatedPhoto (AnimatePhotoGenerateRequest request, MultipartFile image) {
         String actionPrompt = request.getActionPrompt();
         log.info("AI 서버에 사진 영상화를 요청합니다. prompt: {}", actionPrompt);
 
         String videoUrl = callAiServer(image, actionPrompt);
         log.info("사진 영상화 완료. 영상 주소: {}", videoUrl);
 
-        return GetAnimatePhotoResponse.from(videoUrl);
+        return GetAnimatePhotoTempUrlResponse.from(videoUrl);
     }
 
     @Transactional
@@ -114,6 +114,32 @@ public class AnimatePhotoService {
         animatePhotoRepository.delete(animatePhoto);
         log.info("[영상화 삭제] DB 삭제 완료");
 
+    }
+
+    @Transactional(readOnly = true)
+    public GetAnimatePhotoResponse getAnimatePhoto(Long userId, Long animatePhotoId) {
+        log.info("[영상화 단건 조회] 사용자 ID: {}, animatePhotoId: {}", userId, animatePhotoId);
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("[영상화 단건 조회] 사용자 조회 실패 - userId: {}", userId);
+                    return UsersErrorCode.USER_NOT_FOUND.defaultException();
+                });
+
+        AnimatePhoto animatePhoto = animatePhotoRepository.findById(animatePhotoId)
+                .orElseThrow(() -> {
+                    log.error("[영상화 단건 조회] 영상 조회 실패 - animatePhotoId: {}", animatePhotoId);
+                    return AnimatePhotoErrorCode.VIDEO_NOT_FOUND.defaultException();
+                });
+
+        if (!user.getFamily().getId().equals(animatePhoto.getFamily().getId())) {
+            log.warn("[영상화 단건 조회] 권한 없음 - userFamilyId: {}, animatePhotoFamilyId: {}",
+                    user.getFamily().getId(), animatePhoto.getFamily().getId());
+            throw AnimatePhotoErrorCode.UNAUTHORIZED_VIDEO_DELETE.defaultException();
+        }
+
+        String videoUrl = s3Service.generateUrlFromKey(animatePhoto.getAnimatePhoto());
+        log.info("[영상화 단건 조회] 조회 성공 - animatePhotoId: {}", animatePhotoId);
+        return GetAnimatePhotoResponse.from(animatePhoto.getId(), videoUrl);
     }
 
     private String callAiServer(MultipartFile image, String actionPrompt) {

@@ -10,6 +10,7 @@ public enum DiaryErrorCode implements ErrorCode {
     IMAGE_FILE_EMPTY("일기 이미지 파일이 비어 있습니다.", HttpStatus.BAD_REQUEST),
     MEMORY_POST_NOT_FOUND("해당 ID의 게시글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     DIARY_BOOK_NOT_FOUND("해당 그림일기를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    UNAUTHORIZED_DIARY_ACCESS("같은 가족만 접근이 가능합니다.", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED_DIARY_DELETE("같은 가족만 삭제가 가능합니다.", HttpStatus.UNAUTHORIZED),
     AI_SERVER_FAILED("AI 서버로부터 그림일기 콘텐츠를 생성하지 못했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     AI_COMMUNICATION_ERROR("AI 서버와 통신 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
