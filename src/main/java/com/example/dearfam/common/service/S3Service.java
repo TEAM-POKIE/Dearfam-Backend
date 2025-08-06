@@ -10,16 +10,11 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -106,6 +101,30 @@ public class S3Service {
             log.info("S3 이미지 삭제 성공 - key: {}", key);
         } catch (SdkException e) {
             log.error("S3 이미지 삭제 실패 - key: {}", key, e);
+            throw S3ErrorCode.DELETE_FAILED.defaultException(e);
+        }
+    }
+
+    public void deleteAllByKeys(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            log.info("삭제할 S3 키가 없습니다.");
+            return;
+        }
+
+        List<ObjectIdentifier> toDelete = keys.stream()
+                .map(key -> ObjectIdentifier.builder().key(key).build())
+                .collect(Collectors.toList());
+
+        try {
+            DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                    .bucket(bucket)
+                    .delete(Delete.builder().objects(toDelete).build())
+                    .build();
+
+            s3Client.deleteObjects(deleteObjectsRequest);
+            log.info("S3 객체 {}개 일괄 삭제 성공.", keys.size());
+        } catch (SdkException e) {
+            log.error("S3 객체 일괄 삭제 실패.", e);
             throw S3ErrorCode.DELETE_FAILED.defaultException(e);
         }
     }

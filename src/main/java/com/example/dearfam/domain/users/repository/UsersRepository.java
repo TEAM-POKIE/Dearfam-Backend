@@ -14,4 +14,5 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     List<Users> findAllByFamily(Family family);
     Optional<Users> findByEmail(String email);
     List<Users> findAllByFamilyId(Long familyId);
+    int countByFamily(Family family);
 }
