@@ -1,11 +1,18 @@
 package com.example.dearfam.domain.family.entity;
 
 import com.example.dearfam.common.entity.BaseTimeEntity;
+import com.example.dearfam.domain.animatedphoto.entity.AnimatePhoto;
+import com.example.dearfam.domain.diary.entity.DiaryBook;
+import com.example.dearfam.domain.memoryposts.memorypost.entity.MemoryPost;
+import com.example.dearfam.domain.users.entity.Users;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Getter
@@ -28,6 +35,18 @@ public class Family extends BaseTimeEntity {
 
     @Column(name = "child_count")
     private Integer childCount;
+
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Users> users = new ArrayList<>();
+
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemoryPost> memoryPosts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiaryBook> diaryBooks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AnimatePhoto> animatePhotos = new ArrayList<>();
 
     @Builder
     public Family(Long id, String familyName, Integer parentCount, Integer childCount) {
