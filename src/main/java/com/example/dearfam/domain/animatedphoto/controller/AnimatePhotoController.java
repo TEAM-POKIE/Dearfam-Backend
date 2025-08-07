@@ -40,17 +40,9 @@ public class AnimatePhotoController {
     )
     @PostMapping(value = "/generate", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public Response<GetAnimatePhotoTempUrlResponse> generateAnimatePhoto(
-            @Valid @RequestPart("request") String requestJson,
+            @Valid @RequestPart("request") AnimatePhotoGenerateRequest request,
             @RequestPart("image") MultipartFile image
     ) {
-        // TODO : RequestPart 에 AnimatePhotoGenerateRequest 를 다시 RequestPart 에 적용 하기~
-        AnimatePhotoGenerateRequest request;
-        try {
-            request = objectMapper.readValue(requestJson, AnimatePhotoGenerateRequest.class);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("요청 JSON 파싱 실패");
-        }
-
         GetAnimatePhotoTempUrlResponse response = animatePhotoService.generateAnimatedPhoto(request, image);
 
         return Response.data("영상화 완료. 사용자 저장 시 이 영상 주소를 RequestBody 에 넣어주세요.", response);
