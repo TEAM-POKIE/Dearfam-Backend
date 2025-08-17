@@ -1,6 +1,7 @@
 package com.example.dearfam.domain.animatedphoto.service;
 
 import com.example.dearfam.common.entity.UploadDirectory;
+import com.example.dearfam.common.proxy.ProxyUrlBuilder;
 import com.example.dearfam.common.service.S3Service;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoGenerateRequest;
 import com.example.dearfam.domain.animatedphoto.controller.request.AnimatePhotoSaveRequest;
@@ -44,6 +45,7 @@ public class AnimatePhotoService {
     private final AnimatePhotoRepository animatePhotoRepository;
     private final UsersRepository usersRepository;
     private final S3Service s3Service;
+    private final ProxyUrlBuilder proxyUrlBuilder;
 
     @Value("${ai.server.url}")
     private String aiServerUrl;
@@ -55,7 +57,9 @@ public class AnimatePhotoService {
         String videoUrl = callAiServer(image, actionPrompt);
         log.info("사진 영상화 완료. 영상 주소: {}", videoUrl);
 
-        return GetAnimatePhotoTempUrlResponse.from(videoUrl);
+        String proxiedUrl = proxyUrlBuilder.toProxied(videoUrl);
+
+        return GetAnimatePhotoTempUrlResponse.from(proxiedUrl);
     }
 
     @Transactional
@@ -134,7 +138,7 @@ public class AnimatePhotoService {
         if (!user.getFamily().getId().equals(animatePhoto.getFamily().getId())) {
             log.warn("[영상화 단건 조회] 권한 없음 - userFamilyId: {}, animatePhotoFamilyId: {}",
                     user.getFamily().getId(), animatePhoto.getFamily().getId());
-            throw AnimatePhotoErrorCode.UNAUTHORIZED_VIDEO_DELETE.defaultException();
+            throw AnimatePhotoErrorCode.UNAUTHORIZED_VIDEO_ACCESS.defaultException();
         }
 
         String videoUrl = s3Service.generateUrlFromKey(animatePhoto.getAnimatePhoto());
