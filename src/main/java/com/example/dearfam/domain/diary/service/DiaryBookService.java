@@ -1,6 +1,7 @@
     package com.example.dearfam.domain.diary.service;
 
     import com.example.dearfam.common.entity.UploadDirectory;
+    import com.example.dearfam.common.proxy.ProxyUrlBuilder;
     import com.example.dearfam.common.service.S3Service;
     import com.example.dearfam.domain.diary.controller.request.DiaryGenerateRequest;
     import com.example.dearfam.domain.diary.controller.response.GetDiaryUrlResponse;
@@ -41,6 +42,7 @@
         private final UsersRepository usersRepository;
         private final S3Service s3Service;
         private final DiaryBookRepository diaryBookRepository;
+        private final ProxyUrlBuilder proxyUrlBuilder;
 
         @Value("${ai.server.url}")
         private String aiServerUrl;
@@ -65,6 +67,18 @@
             String content = post.getMemoryPostContent();
             log.info("[그림일기 생성] MemoryPost content 가져오기 완료 - content 길이: {}", content.length());
             DiaryContentDto aiGeneratedContent = callAiServer(content);
+
+            // AI가 생성한 이미지 URL을 프록시 URL로 교체합니다.
+            if (aiGeneratedContent != null && aiGeneratedContent.getImageUrl() != null) {
+                String proxiedImageUrl = proxyUrlBuilder.toProxied(aiGeneratedContent.getImageUrl());
+
+                // DiaryContentDto는 불변(immutable)이므로, 새로운 객체를 생성하여 값을 교체합니다.
+                aiGeneratedContent = new DiaryContentDto(
+                        aiGeneratedContent.getTitle(),
+                        aiGeneratedContent.getContent(),
+                        proxiedImageUrl
+                );
+            }
 
             LocalDate memoryDate = post.getMemoryDate();
             String weekday = memoryDate.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);

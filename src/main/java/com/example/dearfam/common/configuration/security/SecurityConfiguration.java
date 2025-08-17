@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
-import java.util.Locale;
 
 @Configuration
 @EnableWebSecurity
@@ -33,20 +32,16 @@ public class SecurityConfiguration {
     @Value("${spring.profiles.active}")
     private String activeProfile;
 
+    @Value("#{'${cors.allowed-origins}'.split(',')}")
+    private List<String> allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of(
-                "https://dearfam-front-end.vercel.app",
-                "https://api.dearfam.store",
-                "https://www.dearfam.org",
-                "http://localhost:8080",
-                "http://10.10.2.179:8080/"
-        ));
+        configuration.setAllowedOriginPatterns(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource resource = new UrlBasedCorsConfigurationSource();
         resource.registerCorsConfiguration("/**", configuration);
 
@@ -79,7 +74,9 @@ public class SecurityConfiguration {
                                     .requestMatchers(request -> request.getRequestURI().startsWith("/v3/api-docs")).permitAll()
                                     .requestMatchers(AntPathRequestMatcher.antMatcher("/dev/ping")).permitAll()
                                     .requestMatchers(request -> request.getRequestURI().startsWith("/h2-console")).permitAll()
-                                    .requestMatchers(request -> request.getRequestURI().startsWith("/auth/oauth2/login")).permitAll();
+                                    .requestMatchers(request -> request.getRequestURI().startsWith("/auth/oauth2/login")).permitAll()
+                                    .requestMatchers(request -> request.getRequestURI().startsWith("/proxy/**") ).permitAll();
+
 
                             // 로컬환경에서 개발용으로 리프레쉬 토큰 발급 local activeProfile이 local일 때만 사용가능
                             if (activeProfile.equals("local")) {

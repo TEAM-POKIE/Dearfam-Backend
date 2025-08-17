@@ -13,6 +13,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,7 +29,18 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png");
+    @Value("${cdn.domain}")
+    private String cdnDomain;
+
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "mp4");
+
+    private static final Map<String, String> MIME_BY_EXT = Map.of(
+            "jpg", "image/jpeg",
+            "jpeg", "image/jpeg",
+            "png", "image/png",
+            "mp4", "video/mp4"
+            // 필요 시 추가
+    );
 
     public String upload(MultipartFile file, UploadDirectory directory, Long id, String idLabel) {
         //1. 파일 유효성 검사하기
@@ -35,12 +49,13 @@ public class S3Service {
         // 2. S3에 저장될 파일 경로 생성 (e.g., posts/1/uuid.jpg)
         String extension = getExtension(file);
         String key = generateKey(directory, id, idLabel, extension);
+        String mime = guessMimeFromExt(extension);
 
         // 3. S3 업로드 요청 객체 생성
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
-                .contentType(file.getContentType())
+                .contentType(mime)
                 .contentLength(file.getSize())
                 .build();
         try {
@@ -64,6 +79,7 @@ public class S3Service {
 
         // 2. 원본 Key에서 확장자 추출 후, 영구 저장될 새로운 Key 생성
         String extension = sourceKey.substring(sourceKey.lastIndexOf(".") + 1);
+        String mime = guessMimeFromExt(extension);
         String destinationKey = generateKey(directory, id, idLabel, extension);
 
         log.info("S3 객체 이동 시작. Source: {} -> Destination: {}", sourceKey, destinationKey);
@@ -74,6 +90,8 @@ public class S3Service {
                     .sourceKey(sourceKey)
                     .destinationBucket(bucket)
                     .destinationKey(destinationKey)
+                    .metadataDirective(MetadataDirective.REPLACE) // TODO: 나중에 DB 갈고는 안써도 되는 부분
+                    .contentType(mime)
                     .build();
             s3Client.copyObject(copyReq);
             log.info("S3 객체 복사 성공.");
@@ -130,40 +148,50 @@ public class S3Service {
     }
 
     public String generateUrlFromKey(String key) {
-        GetUrlRequest getUrlRequest = GetUrlRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-        return s3Client.utilities().getUrl(getUrlRequest).toExternalForm();
+        return "https://" + cdnDomain + "/" + key;
     }
 
     // key 값 추출 함수
     public Optional<String> extractKeyFromUrl(String url) {
-        if (url == null) {
-            log.info("url 값이 null 입니다.");
+        if (url == null || url.isBlank()) {
+            log.info("url 값이 null/blank 입니다.");
             return Optional.empty();
         }
+        try {
+            URI u = URI.create(url);
+            // 쿼리 스트링 제거된 경로에서 앞의 '/' 제거
+            String rawPath = u.getRawPath();               // 인코딩 유지된 경로
+            if (rawPath == null || rawPath.length() <= 1) return Optional.empty();
+            String path = rawPath.startsWith("/") ? rawPath.substring(1) : rawPath;
 
-        String s3UrlPrefix = "https://" + bucket + ".s3.ap-northeast-2.amazonaws.com/";
+            String host = u.getHost() == null ? "" : u.getHost();
 
-        if (!url.startsWith(s3UrlPrefix)) {
-            log.warn("s3 url 형식이 아닙니다.");
+            // 1) CloudFront 도메인
+            if (host.equalsIgnoreCase(cdnDomain)) {
+                return Optional.of(URLDecoder.decode(path, StandardCharsets.UTF_8));
+            }
+
+            // 2) S3 REST 엔드포인트 (region/dualstack 포함 다양한 변형 허용)
+            // 예: {bucket}.s3.ap-northeast-2.amazonaws.com / {bucket}.s3.dualstack.ap-northeast-2.amazonaws.com
+            if (host.toLowerCase().startsWith((bucket + ".s3").toLowerCase())) {
+                return Optional.of(URLDecoder.decode(path, StandardCharsets.UTF_8));
+            }
+
+            log.warn("알 수 없는 호스트로부터 온 URL: host={}, url={}", host, url);
+            return Optional.empty();
+        } catch (IllegalArgumentException e) {
+            log.warn("URL 파싱 실패: {}", url, e);
             return Optional.empty();
         }
-        return Optional.of(url.substring(s3UrlPrefix.length()));
     }
+
+
 
     private void validateImageFile(MultipartFile file) {
         // 파일이 비어있을 때
         if (file.isEmpty()) {
             throw S3ErrorCode.EMPTY_FILE.defaultException();
         }
-        // TODO: 파일이 image 검사 X multipart/form-data 인지를 검사
-        // 파일이 이미지가 아닐때 (Content Type이 image로 시작하지 않는 경우)
-//        if (!Objects.requireNonNull(file.getContentType()).startsWith("image/")) {
-//            log.error(file.getContentType());
-//            throw S3ErrorCode.INVALID_IMAGE_MIME.defaultException();
-//        }
         // 지원하지 않는 확장자인 경우
         if (!ALLOWED_EXTENSIONS.contains(getExtension(file))) {
             throw S3ErrorCode.UNSUPPORTED_EXTENSION.defaultException();
@@ -182,6 +210,11 @@ public class S3Service {
     private String generateKey(UploadDirectory directory, Long id, String idLabel, String extension) {
         String prefix = idLabel + "-" + id;
         return directory.getBaseDir() + "/" + prefix + "/" + UUID.randomUUID() + "." + extension;
+    }
+
+
+    private String guessMimeFromExt(String ext) {
+        return MIME_BY_EXT.getOrDefault(ext.toLowerCase(), "application/octet-stream");
     }
 
 }
