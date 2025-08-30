@@ -70,6 +70,7 @@
 
             // AI가 생성한 이미지 URL을 프록시 URL로 교체합니다.
             if (aiGeneratedContent != null && aiGeneratedContent.getImageUrl() != null) {
+                log.info("[그림일기 생성] proxy화 하지 않은 이미지 URL: {}", aiGeneratedContent.getImageUrl());
                 String proxiedImageUrl = proxyUrlBuilder.toProxied(aiGeneratedContent.getImageUrl());
 
                 // DiaryContentDto는 불변(immutable)이므로, 새로운 객체를 생성하여 값을 교체합니다.
