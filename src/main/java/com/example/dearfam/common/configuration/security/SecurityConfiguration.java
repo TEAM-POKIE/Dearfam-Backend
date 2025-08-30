@@ -75,7 +75,7 @@ public class SecurityConfiguration {
                                     .requestMatchers(AntPathRequestMatcher.antMatcher("/dev/ping")).permitAll()
                                     .requestMatchers(request -> request.getRequestURI().startsWith("/h2-console")).permitAll()
                                     .requestMatchers(request -> request.getRequestURI().startsWith("/auth/oauth2/login")).permitAll()
-                                    .requestMatchers(request -> request.getRequestURI().startsWith("/proxy/**") ).permitAll();
+                                    .requestMatchers(request -> request.getRequestURI().startsWith("/proxy/fetch") ).permitAll();
 
 
                             // 로컬환경에서 개발용으로 리프레쉬 토큰 발급 local activeProfile이 local일 때만 사용가능
