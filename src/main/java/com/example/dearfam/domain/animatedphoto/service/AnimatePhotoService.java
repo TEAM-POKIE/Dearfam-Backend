@@ -171,7 +171,7 @@ public class AnimatePhotoService {
 
         try {
             ResponseEntity<AiAnimatePhotoDto> response = restTemplate.postForEntity(
-                    aiServerUrl + "/animate-image",
+                    "https://" + aiServerUrl + "/animate-image",
                     request,
                     AiAnimatePhotoDto.class
             );

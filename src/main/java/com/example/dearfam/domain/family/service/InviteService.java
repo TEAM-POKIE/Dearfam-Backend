@@ -41,7 +41,7 @@ public class InviteService {
 //        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMinutes(1));
         inviteLinkStore.addCode(code, familyId, expiresAt);
 
-        String link = inviteBaseUrl + "?code=" + code;
+        String link = "https://" + inviteBaseUrl + "/invite" + "?code=" + code;
 
         return InviteLinkDto.from(link, code, expiresAt);
     }

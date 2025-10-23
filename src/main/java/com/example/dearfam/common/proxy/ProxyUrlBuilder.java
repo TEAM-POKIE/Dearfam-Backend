@@ -35,7 +35,7 @@ public class ProxyUrlBuilder {
 
         // ★ 반드시 절대 URL로 반환
         String q = URLEncoder.encode(externalUrl, StandardCharsets.UTF_8);
-        return apiBaseUrl + "/proxy/fetch?url=" + q;
+        return "https://" + apiBaseUrl + "/proxy/fetch?url=" + q;
     }
 
     private String toCdnIfS3(String url) {

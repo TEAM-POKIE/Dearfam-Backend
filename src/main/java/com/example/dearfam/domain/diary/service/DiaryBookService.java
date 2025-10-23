@@ -220,7 +220,7 @@
             try {
                 // AI 서버로부터 List<DiaryContentDto> 타입의 응답을 직접 받기 위해 exchange 사용
                 ResponseEntity<DiaryContentDto> response = restTemplate.postForEntity(
-                        aiServerUrl + "/generate-diary",
+                        "https://" + aiServerUrl + "/generate-diary",
                         entity,
                         DiaryContentDto.class
                 );
