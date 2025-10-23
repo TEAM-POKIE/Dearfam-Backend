@@ -32,6 +32,9 @@ public class S3Service {
     @Value("${cdn.domain}")
     private String cdnDomain;
 
+    @Value("${app.proxy.base-url}")
+    private String proxyHost;
+
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "mp4");
 
     private static final Map<String, String> MIME_BY_EXT = Map.of(
@@ -73,36 +76,36 @@ public class S3Service {
     }
 
     public String moveTempFileToPermanentLocation(String tempUrl, UploadDirectory directory, Long id, String idLabel) {
-        // 1. 임시 URL에서 원본 Key 추출
-        String sourceKey = extractKeyFromUrl(tempUrl)
-                .orElseThrow(S3ErrorCode.INVALID_S3_URL::defaultException);
+        // 1) 프록시 언랩 → CDN URL 검증 → temp key 추출
+        String sourceKey = extractTempKeyFromAnyUrl(tempUrl);
 
-        // 2. 원본 Key에서 확장자 추출 후, 영구 저장될 새로운 Key 생성
+        // 2) 확장자/MIME 추출 후 목적지 키 생성
         String extension = sourceKey.substring(sourceKey.lastIndexOf(".") + 1);
         String mime = guessMimeFromExt(extension);
+
+        // 예: videos/family/{id}/{uuid}.{ext}
         String destinationKey = generateKey(directory, id, idLabel, extension);
 
         log.info("S3 객체 이동 시작. Source: {} -> Destination: {}", sourceKey, destinationKey);
         try {
-            // 3. 객체 복사
+            // 3) Copy (필요시 암호화/메타데이터/CacheControl 지정)
             CopyObjectRequest copyReq = CopyObjectRequest.builder()
                     .sourceBucket(bucket)
                     .sourceKey(sourceKey)
                     .destinationBucket(bucket)
                     .destinationKey(destinationKey)
-                    .metadataDirective(MetadataDirective.REPLACE) // TODO: 나중에 DB 갈고는 안써도 되는 부분
+                    .metadataDirective(MetadataDirective.REPLACE)
                     .contentType(mime)
                     .build();
             s3Client.copyObject(copyReq);
             log.info("S3 객체 복사 성공.");
 
-            // 4. 원본 객체 삭제
+            // 4) 원본 삭제
             delete(sourceKey);
             log.info("원본 임시 S3 객체 삭제 성공.");
 
         } catch (SdkException e) {
             log.error("S3 객체 이동(복사 후 삭제) 실패. Source: {}", sourceKey, e);
-            // S3ErrorCode에 OBJECT_MOVE_FAILED 와 같은 에러 코드를 추가하여 사용하는 것을 권장합니다.
             throw S3ErrorCode.OBJECT_COPY_FAILED.defaultException(e);
         }
 
@@ -215,6 +218,54 @@ public class S3Service {
 
     private String guessMimeFromExt(String ext) {
         return MIME_BY_EXT.getOrDefault(ext.toLowerCase(), "application/octet-stream");
+    }
+
+    // 프록시/직접 URL을 모두 받아 temp key를 뽑아낸다
+    private String extractTempKeyFromAnyUrl(String tempUrl) {
+        String unwrapped = unwrapIfProxyUrl(tempUrl);
+        return extractTempKeyFromCdnUrl(unwrapped);
+    }
+
+    private String unwrapIfProxyUrl(String proxiedUrl) {
+        // 예) https://api.../proxy/fetch?url=https%3A%2F%2Fcdn...%2Ftemp%2Fvideos%2Fxxx.mp4
+        URI uri = URI.create(proxiedUrl);
+
+        // (선택) proxyHost가 설정되어 있으면 호스트 확인
+        if (proxyHost != null && !proxyHost.isBlank() && proxyHost.equalsIgnoreCase(uri.getHost())) {
+            // 쿼리에서 url 파라미터 파싱
+            String query = uri.getRawQuery();
+            if (query == null)  {
+                throw S3ErrorCode.INVALID_S3_URL.defaultException();
+            }
+            for (String pair : query.split("&")) {
+                String[] kv = pair.split("=", 2);
+                if (kv.length == 2 && kv[0].equals("url")) {
+                    return java.net.URLDecoder.decode(kv[1], java.nio.charset.StandardCharsets.UTF_8);
+                }
+            }
+            throw S3ErrorCode.INVALID_S3_URL.defaultException();
+        }
+
+        // 프록시가 아니면 그대로 반환(이미 CDN URL)
+        return proxiedUrl;
+    }
+
+    private String extractTempKeyFromCdnUrl(String cdnUrl) {
+        // 허용된 CDN 도메인만 수락
+        URI uri = URI.create(cdnUrl);
+        String host = uri.getHost();
+        if (host == null || !host.equalsIgnoreCase(cdnDomain)) {
+            throw S3ErrorCode.INVALID_S3_URL.defaultException();
+        }
+
+        // 허용된 프리픽스만 수락 (임시 비디오 전용)
+        String path = uri.getPath(); // /temp/videos/xxx.mp4
+        if (path == null || !path.startsWith("/temp/videos/")) {
+            throw S3ErrorCode.INVALID_S3_URL.defaultException();
+        }
+
+        // 선행 슬래시 제거하여 S3 Key로 변환
+        return path.startsWith("/") ? path.substring(1) : path;
     }
 
 }
